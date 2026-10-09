@@ -1,446 +1,1143 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ledger — Personal Finance</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<style>
-:root{--bg:#F8F8F5;--card:#fff;--text:#252722;--muted:#85877F;--accent:#78917C;--line:#E9EAE4;--inc:#64866A;--exp:#B96F65;--warn:#D6A45D;--warn-text:#8A6420;--exp-text:#9C4F45;--r:14px;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
-*,*::before,*::after{box-sizing:inherit}
-html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:15px/1.5 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-button,input,select{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-main{max-width:720px;margin:0 auto;padding:20px 18px}
-h1{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
-h2{font-size:15px;font-weight:600;margin:0}
-.muted{color:var(--muted)}.small{font-size:13px}
-.row{display:flex;align-items:center;gap:12px}.between{justify-content:space-between}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
-.sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 10px}
-.link{background:none;border:0;color:var(--accent);font-weight:600;font-size:13px;padding:4px}
-.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
-.months{display:flex;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
-.months button{border:0;background:none;width:32px;height:32px;border-radius:50%;font-size:16px}
-.months button:hover{background:var(--bg)}
-.months span{min-width:112px;text-align:center;font-weight:600;font-size:14px}
-.balance{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin:4px 0 16px}
-.pos{color:var(--inc)}.neg{color:var(--exp-text)}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid var(--line);padding-top:14px}
-.split b{display:block;font-size:17px;font-weight:600}
-.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 6px}
-.bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
-.bar.warn i{background:var(--warn)}.bar.over i{background:var(--exp)}
-.badge{font-size:12px;font-weight:600;display:inline-flex;gap:4px;align-items:center}
-.badge.ok{color:var(--inc)}.badge.warn{color:var(--warn-text)}.badge.over{color:var(--exp-text)}.badge.none{color:var(--muted)}
-.ico{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:18px;flex:none;position:relative}
-.ico u{position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--card)}
-.list>.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left}
-.list>.item:first-child{border-top:0}
-.grow{flex:1;min-width:0}.grow>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.amt{font-weight:600;white-space:nowrap}.amt.i{color:var(--inc)}.amt.e{color:var(--exp-text)}
-.rowbtn{display:flex;align-items:center;gap:12px;flex:1;min-width:0;background:none;border:0;padding:0;text-align:left}
-.xdel{flex:none;width:32px;height:32px;border-radius:8px;border:0;background:none;color:var(--muted);font-size:13px}
-.xdel:hover,.xdel:focus-visible{background:var(--bg);color:var(--exp-text)}
-.empty{text-align:center;padding:28px 12px;color:var(--muted)}.empty b{display:block;color:var(--text);margin-bottom:4px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.filters select,.filters input{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;flex:1;min-width:120px}
-.day{font-size:12px;color:var(--muted);font-weight:600;margin:16px 2px 4px}
-.bb{display:flex;height:8px;border-radius:99px;overflow:hidden;gap:2px;margin-bottom:12px;background:var(--line)}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
-nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:500;color:var(--muted);padding:6px 0;border-radius:10px}
-nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-nav button[aria-current=page]{color:var(--text);font-weight:600}
-nav button[aria-current=page] svg{stroke:var(--accent)}
-.fab{position:fixed;right:18px;bottom:calc(78px + env(safe-area-inset-bottom,0px));background:var(--text);color:#fff;border:0;border-radius:999px;padding:13px 20px;font-weight:600;box-shadow:0 4px 14px rgba(37,39,34,.18);z-index:6}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 16px;font-weight:600}
-.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.del{color:var(--exp-text)}
-dialog{border:1px solid var(--line);border-radius:18px;padding:22px;width:min(440px,calc(100% - 24px));background:var(--card);color:var(--text);max-height:92%;overflow:auto}
-dialog::backdrop{background:rgba(37,39,34,.35)}
-label{display:block;font-size:13px;font-weight:600;margin:14px 0 5px}
-dialog input,dialog select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:10px;padding:3px;margin-top:12px}
-.seg button{border:0;background:none;border-radius:8px;padding:8px;font-weight:600;color:var(--muted)}
-.seg button[aria-pressed=true]{background:#fff;color:var(--text);box-shadow:0 0 0 1px var(--line)}
-.err{color:var(--exp-text);font-size:12px;margin-top:4px;min-height:0}
-.acts{display:flex;gap:8px;margin-top:20px}.acts .pri{flex:1}
-.sw{display:flex;gap:8px;flex-wrap:wrap}
-.sw button{width:30px;height:30px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);padding:0}
-.sw button[aria-pressed=true]{box-shadow:0 0 0 2px var(--text)}
-.ic{display:flex;gap:6px;flex-wrap:wrap}
-.ic button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:18px;padding:0}
-.ic button[aria-pressed=true]{border-color:var(--text);background:var(--bg)}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));background:var(--text);color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
-#toast.on{opacity:1}
-@media(min-width:860px){
-body{padding-left:200px;padding-bottom:40px}
-main{padding:36px 28px}
-nav{top:0;right:auto;width:200px;flex-direction:column;border-top:0;border-right:1px solid var(--line);padding:28px 12px;gap:4px;justify-content:flex-start}
-nav button{flex-direction:row;flex:none;gap:12px;font-size:14px;padding:11px 14px}
-.fab{bottom:28px;right:32px}#toast{bottom:90px}
-}
-[hidden]{display:none!important}
-.sync{font-size:12px;text-align:right;color:var(--muted);margin:-6px 2px 10px}.sync.error{color:var(--warn-text)}
-#af input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff}
-@media(min-width:860px){body.out{padding-left:0}}
-dialog input,dialog select,#af input{font-size:16px}
-#ccol{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);background:none;cursor:pointer}
-#ccol[data-on=true]{box-shadow:0 0 0 2px var(--text)}
-#ci{flex:1}
-.loader{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:0 24px}
-.loader .lt{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:6px}
-.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.sw2{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px}
-#cprim{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;border:0;padding:0;flex:none;transition:background .2s}
-#cprim::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .2s}
-#cprim:checked{background:var(--accent)}
-#cprim:checked::after{transform:translateX(18px)}
-@media(prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
-</head>
-<body>
-<main id="app" aria-live="polite"></main>
-<button class="fab" id="fab" aria-label="Add transaction">+ Add</button>
-<nav id="nav" aria-label="Main"></nav>
-<dialog id="dlg"></dialog>
-<dialog id="dlg2"></dialog>
-<div id="toast" role="status"></div>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ledger — by geboboi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --bg: #F8F8F5;
+      --card: #fff;
+      --text: #252722;
+      --muted: #85877F;
+      --accent: #78917C;
+      --line: #E9EAE4;
+      --inc: #64866A;
+      --exp: #B96F65;
+      --warn: #D6A45D;
+      --warn-text: #8A6420;
+      --exp-text: #9C4F45;
+      --r: 14px;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px)
+    }
 
-<script>
-/* ---------- Data & persistence ---------- */
-const KEY='ledger.v1';
-const TONES=['#78917C','#6F7F6E','#5F8C8A','#7F9FA8','#6F86A8','#8A9AA6','#9A8AA6','#B58AA0','#B96F65','#C48B7A','#D6A45D','#A8A25C','#A89A86','#8C7B6B'];
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const pad=n=>String(n).padStart(2,'0');
-const monthOf=d=>d.slice(0,7);
-const nowMonth=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)};
-const shift=(m,k)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+k,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
-const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit
+    }
 
-let S={cats:[],tx:[]};
+    html,
+    body {
+      margin: 0
+    }
 
-/* ---------- Supabase sync ---------- */
-const SB_URL='https://xmmxtxzihzqwoatsqfgi.supabase.co';
-const SB_KEY='sb_publishable_ER0XMecEuKKRGqEaUxVRFw_mrEMJssy';
-const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-let lastErr='',user=null,loaded=false,booting=true,dirty=false,busy=false,again=false,syncState='load',snap={cats:new Map(),tx:new Map()},rt;
-const SY={ok:'● Synced',pending:'○ Saving…',load:'○ Loading…',error:'▲ Offline — saved on this device, will retry'};
-const toC=c=>({id:c.id,name:c.name,icon:c.icon,color:c.color,budget:c.budget,is_primary:c.primary!==false,month:c.month||null});
-const toT=t=>({id:t.id,type:t.type,amount:t.amount,date:t.date,cat:t.cat||null,source:t.source||null,description:t.desc||''});
-const fromC=r=>({id:r.id,name:r.name,icon:r.icon,color:r.color,budget:Number(r.budget),primary:r.is_primary!==false,month:r.month||''});
-const fromT=r=>({id:r.id,type:r.type,amount:Number(r.amount),date:r.date,cat:r.cat||'',source:r.source||'',desc:r.description||''});
-const cacheKey=()=>'ledger.v2.'+user.id;
-function cacheWrite(){if(!user)return;try{localStorage.setItem(cacheKey(),JSON.stringify({cats:S.cats,tx:S.tx,dirty}))}catch(e){}}
-const errText=e=>{lastErr=[e&&e.message,e&&e.code,e&&e.hint].filter(Boolean).join(' · ')||String(e);console.error('Sync error:',e)};
-const syText=st=>SY[st]+(st==='error'&&lastErr?' ('+lastErr+')':'');
-function setSync(st){syncState=st;const e=document.getElementById('sy');if(e){e.textContent=syText(st);e.className='sync '+st}}
-function setSnap(r){snap.cats=new Map(r.cats.map(c=>[c.id,JSON.stringify(toC(c))]));snap.tx=new Map(r.tx.map(t=>[t.id,JSON.stringify(toT(t))]))}
-async function fetchAll(tbl){let out=[],from=0;for(;;){const{data,error}=await sb.from(tbl).select('*').order('id').range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;from+=1000}return out}
-async function fetchRemote(){const[c,t]=await Promise.all([fetchAll('categories'),fetchAll('transactions')]);return{cats:c.map(fromC),tx:t.map(fromT)}}
-function save(){dirty=true;cacheWrite();setSync('pending');sync()}
-function scheduleRetry(){clearTimeout(rt);rt=setTimeout(()=>loaded?sync():user&&enter(user),8000)}
-async function sync(){
-  if(!user||!loaded)return;
-  if(busy){again=true;return}
-  busy=true;
-  try{
-    do{again=false;
-      for(const[name,tbl,map,conv]of[['cats','categories',snap.cats,toC],['tx','transactions',snap.tx,toT]]){
-        const rows=S[name].map(conv),ids=new Set(rows.map(r=>r.id));
-        const up=rows.filter(r=>map.get(r.id)!==JSON.stringify(r));
-        const del=[...map.keys()].filter(id=>!ids.has(id));
-        if(up.length){const{error}=await sb.from(tbl).upsert(up);if(error)throw error;up.forEach(r=>map.set(r.id,JSON.stringify(r)))}
-        if(del.length){const{error}=await sb.from(tbl).delete().in('id',del);if(error)throw error;del.forEach(id=>map.delete(id))}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px))
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      color: inherit
+    }
+
+    button {
+      cursor: pointer
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px
+    }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 18px
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -.01em
+    }
+
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .small {
+      font-size: 13px
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .between {
+      justify-content: space-between
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 18px;
+      margin-bottom: 14px
+    }
+
+    .sec {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 22px 2px 10px
+    }
+
+    .link {
+      background: none;
+      border: 0;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 4px
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 10px
+    }
+
+    .months {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px
+    }
+
+    .months button {
+      border: 0;
+      background: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px
+    }
+
+    .months button:hover {
+      background: var(--bg)
+    }
+
+    .months span {
+      min-width: 112px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px
+    }
+
+    .balance {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin: 4px 0 16px
+    }
+
+    .pos {
+      color: var(--inc)
+    }
+
+    .neg {
+      color: var(--exp-text)
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px
+    }
+
+    .split b {
+      display: block;
+      font-size: 17px;
+      font-weight: 600
+    }
+
+    .bar {
+      height: 6px;
+      background: var(--line);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0 6px
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent)
+    }
+
+    .bar.warn i {
+      background: var(--warn)
+    }
+
+    .bar.over i {
+      background: var(--exp)
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      gap: 4px;
+      align-items: center
+    }
+
+    .badge.ok {
+      color: var(--inc)
+    }
+
+    .badge.warn {
+      color: var(--warn-text)
+    }
+
+    .badge.over {
+      color: var(--exp-text)
+    }
+
+    .badge.none {
+      color: var(--muted)
+    }
+
+    .ico {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      flex: none;
+      position: relative
+    }
+
+    .ico u {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--card)
+    }
+
+    .list>.item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      width: 100%;
+      background: none;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+      text-align: left
+    }
+
+    .list>.item:first-child {
+      border-top: 0
+    }
+
+    .grow {
+      flex: 1;
+      min-width: 0
+    }
+
+    .grow>div {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .amt {
+      font-weight: 600;
+      white-space: nowrap
+    }
+
+    .amt.i {
+      color: var(--inc)
+    }
+
+    .amt.e {
+      color: var(--exp-text)
+    }
+
+    .rowbtn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      background: none;
+      border: 0;
+      padding: 0;
+      text-align: left
+    }
+
+    .xdel {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 0;
+      background: none;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .xdel:hover,
+    .xdel:focus-visible {
+      background: var(--bg);
+      color: var(--exp-text)
+    }
+
+    .empty {
+      text-align: center;
+      padding: 28px 12px;
+      color: var(--muted)
+    }
+
+    .empty b {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px
+    }
+
+    .filters select,
+    .filters input {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      flex: 1;
+      min-width: 120px
+    }
+
+    .day {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 16px 2px 4px
+    }
+
+    .bb {
+      display: flex;
+      height: 8px;
+      border-radius: 99px;
+      overflow: hidden;
+      gap: 2px;
+      margin-bottom: 12px;
+      background: var(--line)
+    }
+
+    nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--card);
+      border-top: 1px solid var(--line);
+      display: flex;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+      z-index: 5
+    }
+
+    nav button {
+      flex: 1;
+      border: 0;
+      background: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 6px 0;
+      border-radius: 10px
+    }
+
+    nav button svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    nav button[aria-current=page] {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    nav button[aria-current=page] svg {
+      stroke: var(--accent)
+    }
+
+    .fab {
+      position: fixed;
+      right: 18px;
+      bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+      background: var(--text);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(37, 39, 34, .18);
+      z-index: 6
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-weight: 600
+    }
+
+    .btn.pri {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .btn.del {
+      color: var(--exp-text)
+    }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      width: min(440px, calc(100% - 24px));
+      background: var(--card);
+      color: var(--text);
+      max-height: 92%;
+      overflow: auto
+    }
+
+    dialog::backdrop {
+      background: rgba(37, 39, 34, .35)
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 14px 0 5px
+    }
+
+    dialog input,
+    dialog select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 12px;
+      background: #fff
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 3px;
+      margin-top: 12px
+    }
+
+    .seg button {
+      border: 0;
+      background: none;
+      border-radius: 8px;
+      padding: 8px;
+      font-weight: 600;
+      color: var(--muted)
+    }
+
+    .seg button[aria-pressed=true] {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 0 0 1px var(--line)
+    }
+
+    .err {
+      color: var(--exp-text);
+      font-size: 12px;
+      margin-top: 4px;
+      min-height: 0
+    }
+
+    .acts {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px
+    }
+
+    .acts .pri {
+      flex: 1
+    }
+
+    .sw {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .sw button {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--card);
+      box-shadow: 0 0 0 1px var(--line);
+      padding: 0
+    }
+
+    .sw button[aria-pressed=true] {
+      box-shadow: 0 0 0 2px var(--text)
+    }
+
+    .ic {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .ic button {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 18px;
+      padding: 0
+    }
+
+    .ic button[aria-pressed=true] {
+      border-color: var(--text);
+      background: var(--bg)
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+      background: var(--text);
+      color: #fff;
+      padding: 9px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 20
+    }
+
+    #toast.on {
+      opacity: 1
+    }
+
+    @media(min-width:860px) {
+      body {
+        padding-left: 200px;
+        padding-bottom: 40px
       }
-    }while(again);
-    dirty=false;cacheWrite();setSync('ok');
-  }catch(e){errText(e);setSync('error');scheduleRetry()}
-  busy=false;
-}
-async function enter(u){
-  user=u;loaded=false;setSync('load');render();
-  let local=null;try{local=JSON.parse(localStorage.getItem(cacheKey()))}catch(e){}
-  try{
-    const r=await fetchRemote();setSnap(r);loaded=true;
-    if(local&&local.dirty){S={cats:local.cats,tx:local.tx};dirty=true;sync()}
-    else{S=r;dirty=false;cacheWrite();setSync('ok')}
-  }catch(e){
-    if(local){S={cats:local.cats,tx:local.tx};dirty=!!local.dirty;loaded=true}
-    errText(e);setSync('error');scheduleRetry();
-  }
-  render();
-}
-async function refresh(manual){
-  if(!user||!loaded||busy||dlg.open)return;
-  if(dirty){await sync();if(dirty)return}
-  try{const r=await fetchRemote();if(dirty||busy||dlg.open)return;setSnap(r);S=r;cacheWrite();render();setSync('ok');if(manual)toast('Up to date')}
-  catch(e){errText(e);setSync('error');if(manual)toast('Could not reach the server')}
-}
+
+      main {
+        padding: 36px 28px
+      }
+
+      nav {
+        top: 0;
+        right: auto;
+        width: 200px;
+        flex-direction: column;
+        border-top: 0;
+        border-right: 1px solid var(--line);
+        padding: 28px 12px;
+        gap: 4px;
+        justify-content: flex-start
+      }
+
+      nav button {
+        flex-direction: row;
+        flex: none;
+        gap: 12px;
+        font-size: 14px;
+        padding: 11px 14px
+      }
+
+      .fab {
+        bottom: 28px;
+        right: 32px
+      }
+
+      #toast {
+        bottom: 90px
+      }
+    }
+
+    [hidden] {
+      display: none !important
+    }
+
+    .sync {
+      font-size: 12px;
+      text-align: right;
+      color: var(--muted);
+      margin: -6px 2px 10px
+    }
+
+    .sync.error {
+      color: var(--warn-text)
+    }
+
+    #af input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 12px;
+      background: #fff
+    }
+
+    @media(min-width:860px) {
+      body.out {
+        padding-left: 0
+      }
+    }
+
+    dialog input,
+    dialog select,
+    #af input {
+      font-size: 16px
+    }
+
+    #ccol {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid var(--card);
+      box-shadow: 0 0 0 1px var(--line);
+      background: none;
+      cursor: pointer
+    }
+
+    #ccol[data-on=true] {
+      box-shadow: 0 0 0 2px var(--text)
+    }
+
+    #ci {
+      flex: 1
+    }
+
+    .loader {
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+      padding: 0 24px
+    }
+
+    .loader .lt {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-top: 6px
+    }
+
+    .spin {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 3px solid var(--line);
+      border-top-color: var(--accent);
+      animation: sp .8s linear infinite
+    }
+
+    @keyframes sp {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .sw2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 16px
+    }
+
+    #cprim {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 46px;
+      height: 28px;
+      border-radius: 99px;
+      background: var(--line);
+      position: relative;
+      cursor: pointer;
+      border: 0;
+      padding: 0;
+      flex: none;
+      transition: background .2s
+    }
+
+    #cprim::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+      transition: transform .2s
+    }
+
+    #cprim:checked {
+      background: var(--accent)
+    }
+
+    #cprim:checked::after {
+      transform: translateX(18px)
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      .spin {
+        animation-duration: 2.4s
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        transition: none !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="app" aria-live="polite"></main>
+  <button class="fab" id="fab" aria-label="Add transaction">+ Add</button>
+  <nav id="nav" aria-label="Main"></nav>
+  <dialog id="dlg"></dialog>
+  <dialog id="dlg2"></dialog>
+  <div id="toast" role="status"></div>
+
+  <script>
+    /* ---------- Data & persistence ---------- */
+    const KEY = 'ledger.v1';
+    const TONES = ['#78917C', '#6F7F6E', '#5F8C8A', '#7F9FA8', '#6F86A8', '#8A9AA6', '#9A8AA6', '#B58AA0', '#B96F65', '#C48B7A', '#D6A45D', '#A8A25C', '#A89A86', '#8C7B6B'];
+    const ICONS = ['🍚', '🚗', '🏠', '🛍️', '💡', '🎁', '💼'];
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const pad = n => String(n).padStart(2, '0');
+    const monthOf = d => d.slice(0, 7);
+    const nowMonth = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) };
+    const shift = (m, k) => { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + k, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1) };
+    const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) };
+
+    let S = { cats: [], tx: [] };
+
+    /* ---------- Supabase sync ---------- */
+    const SB_URL = 'https://xmmxtxzihzqwoatsqfgi.supabase.co';
+    const SB_KEY = 'sb_publishable_ER0XMecEuKKRGqEaUxVRFw_mrEMJssy';
+    const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+    let lastErr = '', user = null, loaded = false, booting = true, dirty = false, busy = false, again = false, syncState = 'load', snap = { cats: new Map(), tx: new Map() }, rt;
+    const SY = { ok: '● Synced', pending: '○ Saving…', load: '○ Loading…', error: '▲ Offline — saved on this device, will retry' };
+    const toC = c => ({ id: c.id, name: c.name, icon: c.icon, color: c.color, budget: c.budget, is_primary: c.primary !== false, month: c.month || null });
+    const toT = t => ({ id: t.id, type: t.type, amount: t.amount, date: t.date, cat: t.cat || null, source: t.source || null, description: t.desc || '' });
+    const fromC = r => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, budget: Number(r.budget), primary: r.is_primary !== false, month: r.month || '' });
+    const fromT = r => ({ id: r.id, type: r.type, amount: Number(r.amount), date: r.date, cat: r.cat || '', source: r.source || '', desc: r.description || '' });
+    const cacheKey = () => 'ledger.v2.' + user.id;
+    function cacheWrite() { if (!user) return; try { localStorage.setItem(cacheKey(), JSON.stringify({ cats: S.cats, tx: S.tx, dirty })) } catch (e) { } }
+    const errText = e => { lastErr = [e && e.message, e && e.code, e && e.hint].filter(Boolean).join(' · ') || String(e); console.error('Sync error:', e) };
+    const syText = st => SY[st] + (st === 'error' && lastErr ? ' (' + lastErr + ')' : '');
+    function setSync(st) { syncState = st; const e = document.getElementById('sy'); if (e) { e.textContent = syText(st); e.className = 'sync ' + st } }
+    function setSnap(r) { snap.cats = new Map(r.cats.map(c => [c.id, JSON.stringify(toC(c))])); snap.tx = new Map(r.tx.map(t => [t.id, JSON.stringify(toT(t))])) }
+    async function fetchAll(tbl) { let out = [], from = 0; for (; ;) { const { data, error } = await sb.from(tbl).select('*').order('id').range(from, from + 999); if (error) throw error; out = out.concat(data); if (data.length < 1000) break; from += 1000 } return out }
+    async function fetchRemote() { const [c, t] = await Promise.all([fetchAll('categories'), fetchAll('transactions')]); return { cats: c.map(fromC), tx: t.map(fromT) } }
+    function save() { dirty = true; cacheWrite(); setSync('pending'); sync() }
+    function scheduleRetry() { clearTimeout(rt); rt = setTimeout(() => loaded ? sync() : user && enter(user), 8000) }
+    async function sync() {
+      if (!user || !loaded) return;
+      if (busy) { again = true; return }
+      busy = true;
+      try {
+        do {
+          again = false;
+          for (const [name, tbl, map, conv] of [['cats', 'categories', snap.cats, toC], ['tx', 'transactions', snap.tx, toT]]) {
+            const rows = S[name].map(conv), ids = new Set(rows.map(r => r.id));
+            const up = rows.filter(r => map.get(r.id) !== JSON.stringify(r));
+            const del = [...map.keys()].filter(id => !ids.has(id));
+            if (up.length) { const { error } = await sb.from(tbl).upsert(up); if (error) throw error; up.forEach(r => map.set(r.id, JSON.stringify(r))) }
+            if (del.length) { const { error } = await sb.from(tbl).delete().in('id', del); if (error) throw error; del.forEach(id => map.delete(id)) }
+          }
+        } while (again);
+        dirty = false; cacheWrite(); setSync('ok');
+      } catch (e) { errText(e); setSync('error'); scheduleRetry() }
+      busy = false;
+    }
+    async function enter(u) {
+      user = u; loaded = false; setSync('load'); render();
+      let local = null; try { local = JSON.parse(localStorage.getItem(cacheKey())) } catch (e) { }
+      try {
+        const r = await fetchRemote(); setSnap(r); loaded = true;
+        if (local && local.dirty) { S = { cats: local.cats, tx: local.tx }; dirty = true; sync() }
+        else { S = r; dirty = false; cacheWrite(); setSync('ok') }
+      } catch (e) {
+        if (local) { S = { cats: local.cats, tx: local.tx }; dirty = !!local.dirty; loaded = true }
+        errText(e); setSync('error'); scheduleRetry();
+      }
+      render();
+    }
+    async function refresh(manual) {
+      if (!user || !loaded || busy || dlg.open) return;
+      if (dirty) { await sync(); if (dirty) return }
+      try { const r = await fetchRemote(); if (dirty || busy || dlg.open) return; setSnap(r); S = r; cacheWrite(); render(); setSync('ok'); if (manual) toast('Up to date') }
+      catch (e) { errText(e); setSync('error'); if (manual) toast('Could not reach the server') }
+    }
 
 
-/* ---------- Calculations ---------- */
-const Calc={
-  inMonth:(m)=>S.tx.filter(t=>monthOf(t.date)===m),
-  sum:(l,type)=>l.filter(t=>t.type===type).reduce((a,t)=>a+t.amount,0),
-  totals(m){const l=this.inMonth(m);const inc=this.sum(l,'income'),exp=this.sum(l,'expense');return{inc,exp,bal:inc-exp}},
-  catRows(m){const l=this.inMonth(m).filter(t=>t.type==='expense');
-    return S.cats.filter(c=>c.primary!==false||c.month===m||l.some(t=>t.cat===c.id)).map(c=>{const spent=l.filter(t=>t.cat===c.id).reduce((a,t)=>a+t.amount,0);
-      const pct=c.budget>0?spent/c.budget*100:null;return{...c,spent,left:c.budget-spent,pct}})},
-  uncategorized(m){return this.inMonth(m).filter(t=>t.type==='expense'&&!S.cats.some(c=>c.id===t.cat)).reduce((a,t)=>a+t.amount,0)},
-  status(r){
-    if(r.budget<=0)return r.spent>0?{k:'none',t:'No budget set'}:{k:'none',t:'No budget'};
-    if(r.pct>=100)return{k:'over',t:r.pct>100?'Over budget':'Budget reached',i:'▲'};
-    if(r.pct>=80)return{k:'warn',t:'Near limit',i:'!'};
-    return{k:'ok',t:'On track',i:'✓'}}
-};
+    /* ---------- Calculations ---------- */
+    const Calc = {
+      inMonth: (m) => S.tx.filter(t => monthOf(t.date) === m),
+      sum: (l, type) => l.filter(t => t.type === type).reduce((a, t) => a + t.amount, 0),
+      totals(m) { const l = this.inMonth(m); const inc = this.sum(l, 'income'), exp = this.sum(l, 'expense'); return { inc, exp, bal: inc - exp } },
+      catRows(m) {
+        const l = this.inMonth(m).filter(t => t.type === 'expense');
+        return S.cats.filter(c => c.primary !== false || c.month === m || l.some(t => t.cat === c.id)).map(c => {
+          const spent = l.filter(t => t.cat === c.id).reduce((a, t) => a + t.amount, 0);
+          const pct = c.budget > 0 ? spent / c.budget * 100 : null; return { ...c, spent, left: c.budget - spent, pct }
+        })
+      },
+      uncategorized(m) { return this.inMonth(m).filter(t => t.type === 'expense' && !S.cats.some(c => c.id === t.cat)).reduce((a, t) => a + t.amount, 0) },
+      status(r) {
+        if (r.budget <= 0) return r.spent > 0 ? { k: 'none', t: 'No budget set' } : { k: 'none', t: 'No budget' };
+        if (r.pct >= 100) return { k: 'over', t: r.pct > 100 ? 'Over budget' : 'Budget reached', i: '▲' };
+        if (r.pct >= 80) return { k: 'warn', t: 'Near limit', i: '!' };
+        return { k: 'ok', t: 'On track', i: '✓' }
+      }
+    };
 
-/* ---------- Helpers ---------- */
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const idr=n=>(n<0?'−':'')+'Rp\u00a0'+Math.abs(Math.round(n)).toLocaleString('id-ID');
-const mLabel=m=>{const [y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})};
-const dLabel=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})};
-const catOptions=sel=>{const o=c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${esc(c.icon+' '+c.name+(c.primary===false?' · '+mLabel(c.month||month):''))}</option>`;
-  const p=S.cats.filter(c=>c.primary!==false),n=S.cats.filter(c=>c.primary===false);
-  return p.map(o).join('')+(n.length?`<optgroup label="One-time">${n.map(o).join('')}</optgroup>`:'')};
-const catOf=id=>S.cats.find(c=>c.id===id);
-let tmr;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(tmr);tmr=setTimeout(()=>e.classList.remove('on'),2200)}
-const $=s=>document.querySelector(s);
+    /* ---------- Helpers ---------- */
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const idr = n => (n < 0 ? '−' : '') + 'Rp\u00a0' + Math.abs(Math.round(n)).toLocaleString('id-ID');
+    const mLabel = m => { const [y, mo] = m.split('-').map(Number); return new Date(y, mo - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) };
+    const dLabel = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) };
+    const catOptions = sel => {
+      const o = c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.icon + ' ' + c.name + (c.primary === false ? ' · ' + mLabel(c.month || month) : ''))}</option>`;
+      const p = S.cats.filter(c => c.primary !== false), n = S.cats.filter(c => c.primary === false);
+      return p.map(o).join('') + (n.length ? `<optgroup label="One-time">${n.map(o).join('')}</optgroup>` : '')
+    };
+    const catOf = id => S.cats.find(c => c.id === id);
+    let tmr; function toast(m) { const e = document.getElementById('toast'); e.textContent = m; e.classList.add('on'); clearTimeout(tmr); tmr = setTimeout(() => e.classList.remove('on'), 2200) }
+    const $ = s => document.querySelector(s);
 
-/* ---------- View state ---------- */
-let view='home',month=nowMonth();
-const F={month:nowMonth(),type:'all',cat:'all'};
-const TABS=[['home','Home','<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>'],
-['tx','Transactions','<path d="M5 7h14M5 12h14M5 17h9"/>'],
-['budgets','Budgets','<circle cx="12" cy="12" r="8"/><path d="M12 4v8l5.5 5.5"/>'],
-['settings','Settings','<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>']];
+    /* ---------- View state ---------- */
+    let view = 'home', month = nowMonth();
+    const F = { month: nowMonth(), type: 'all', cat: 'all' };
+    const TABS = [['home', 'Home', '<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>'],
+    ['tx', 'Transactions', '<path d="M5 7h14M5 12h14M5 17h9"/>'],
+    ['budgets', 'Budgets', '<circle cx="12" cy="12" r="8"/><path d="M12 4v8l5.5 5.5"/>'],
+    ['settings', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>']];
 
-function monthHead(title){return`<div class="head"><h1>${title}</h1><div class="months"><button data-act="pm" aria-label="Previous month">‹</button><span>${mLabel(month)}</span><button data-act="nm" aria-label="Next month">›</button></div></div>`}
-function icon(c,dot){return`<div class="ico" aria-hidden="true">${c?esc(c.icon):'•'}${dot&&c?`<u style="background:${c.color}"></u>`:''}</div>`}
+    function monthHead(title) { return `<div class="head"><h1>${title}</h1><div class="months"><button data-act="pm" aria-label="Previous month">‹</button><span>${mLabel(month)}</span><button data-act="nm" aria-label="Next month">›</button></div></div>` }
+    function icon(c, dot) { return `<div class="ico" aria-hidden="true">${c ? esc(c.icon) : '•'}${dot && c ? `<u style="background:${c.color}"></u>` : ''}</div>` }
 
-function txItem(t){
-  const c=catOf(t.cat),inc=t.type==='income';
-  const name=inc?(t.source||'Income'):(c?c.name:'Uncategorized');
-  return`<div class="item"><button class="rowbtn" data-act="edit" data-id="${t.id}" aria-label="Edit ${esc(name)}">${inc?`<div class="ico" aria-hidden="true">↓</div>`:icon(c,true)}
-  <div class="grow"><div style="font-weight:600">${esc(name)}</div><div class="small muted">${esc(t.desc||(inc?'Income':'Expense'))}</div></div>
-  <div class="amt ${inc?'i':'e'}">${inc?'+':'−'}${idr(t.amount)}</div></button>
-  <button class="xdel" data-act="deltx" data-id="${t.id}" aria-label="Delete ${esc(name)} transaction">✕</button></div>`}
+    function txItem(t) {
+      const c = catOf(t.cat), inc = t.type === 'income';
+      const name = inc ? (t.source || 'Income') : (c ? c.name : 'Uncategorized');
+      return `<div class="item"><button class="rowbtn" data-act="edit" data-id="${t.id}" aria-label="Edit ${esc(name)}">${inc ? `<div class="ico" aria-hidden="true">↓</div>` : icon(c, true)}
+  <div class="grow"><div style="font-weight:600">${esc(name)}</div><div class="small muted">${esc(t.desc || (inc ? 'Income' : 'Expense'))}</div></div>
+  <div class="amt ${inc ? 'i' : 'e'}">${inc ? '+' : '−'}${idr(t.amount)}</div></button>
+  <button class="xdel" data-act="deltx" data-id="${t.id}" aria-label="Delete ${esc(name)} transaction">✕</button></div>`
+    }
 
-function budgetRow(r){
-  const s=Calc.status(r),w=r.pct==null?0:Math.min(100,r.pct);
-  const pctTxt=r.pct==null?'—':Math.round(r.pct)+'%';
-  return`<div class="card"><div class="row">${icon(r,true)}<div class="grow"><div style="font-weight:600">${esc(r.name)}</div>
-  <div class="small muted">${r.budget>0?'Budget '+idr(r.budget):'No monthly budget'}${r.primary===false?' · One-time':''}</div></div>
+    function budgetRow(r) {
+      const s = Calc.status(r), w = r.pct == null ? 0 : Math.min(100, r.pct);
+      const pctTxt = r.pct == null ? '—' : Math.round(r.pct) + '%';
+      return `<div class="card"><div class="row">${icon(r, true)}<div class="grow"><div style="font-weight:600">${esc(r.name)}</div>
+  <div class="small muted">${r.budget > 0 ? 'Budget ' + idr(r.budget) : 'No monthly budget'}${r.primary === false ? ' · One-time' : ''}</div></div>
   <button class="link" data-act="editcat" data-id="${r.id}">Edit</button></div>
   <div class="bar ${s.k}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(w)}" aria-label="${esc(r.name)} budget used"><i style="width:${w}%"></i></div>
-  <div class="row between small"><span>${idr(r.spent)} spent · <b>${pctTxt}</b></span><span class="badge ${s.k}">${s.i?s.i+' ':''}${s.t}</span></div>
-  <div class="small ${r.left<0?'neg':'muted'}" style="margin-top:2px">${r.budget>0||r.spent>0?(r.left<0?'Over by '+idr(-r.left):idr(r.left)+' left'):''}</div></div>`}
+  <div class="row between small"><span>${idr(r.spent)} spent · <b>${pctTxt}</b></span><span class="badge ${s.k}">${s.i ? s.i + ' ' : ''}${s.t}</span></div>
+  <div class="small ${r.left < 0 ? 'neg' : 'muted'}" style="margin-top:2px">${r.budget > 0 || r.spent > 0 ? (r.left < 0 ? 'Over by ' + idr(-r.left) : idr(r.left) + ' left') : ''}</div></div>`
+    }
 
-/* ---------- Views ---------- */
-function home(){
-  const T=Calc.totals(month),rows=Calc.catRows(month),unc=Calc.uncategorized(month);
-  const budgeted=rows.filter(r=>r.budget>0),tb=budgeted.reduce((a,r)=>a+r.budget,0),ts=budgeted.reduce((a,r)=>a+r.spent,0);
-  const op=tb>0?ts/tb*100:null,os=op==null?{k:'none',t:'No budgets set'}:Calc.status({budget:tb,pct:op});
-  const spend=rows.filter(r=>r.spent>0).sort((a,b)=>b.spent-a.spent);
-  const all=T.exp,recent=Calc.inMonth(month).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,5);
-  return monthHead('Overview')+`
+    /* ---------- Views ---------- */
+    function home() {
+      const T = Calc.totals(month), rows = Calc.catRows(month), unc = Calc.uncategorized(month);
+      const budgeted = rows.filter(r => r.budget > 0), tb = budgeted.reduce((a, r) => a + r.budget, 0), ts = budgeted.reduce((a, r) => a + r.spent, 0);
+      const op = tb > 0 ? ts / tb * 100 : null, os = op == null ? { k: 'none', t: 'No budgets set' } : Calc.status({ budget: tb, pct: op });
+      const spend = rows.filter(r => r.spent > 0).sort((a, b) => b.spent - a.spent);
+      const all = T.exp, recent = Calc.inMonth(month).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, 5);
+      return monthHead('Overview') + `
   <div class="card"><div class="muted small">Remaining balance</div>
-  <div class="balance ${T.bal<0?'neg':'pos'}">${idr(T.bal)}</div>
+  <div class="balance ${T.bal < 0 ? 'neg' : 'pos'}">${idr(T.bal)}</div>
   <div class="split"><div><span class="muted small">Income</span><b class="pos">${idr(T.inc)}</b></div><div><span class="muted small">Expenses</span><b class="neg">${idr(T.exp)}</b></div></div></div>
-  <div class="card"><div class="row between"><h2>Budget used</h2><span class="badge ${os.k}">${os.i?os.i+' ':''}${os.t}</span></div>
-  <div class="bar ${os.k}" role="progressbar" aria-valuenow="${op==null?0:Math.round(Math.min(op,100))}" aria-valuemin="0" aria-valuemax="100" aria-label="Overall budget used"><i style="width:${op==null?0:Math.min(100,op)}%"></i></div>
-  <div class="small muted">${op==null?'Set category budgets to track usage.':idr(ts)+' of '+idr(tb)+' · <b style="color:var(--text)">'+Math.round(op)+'%</b>'}</div></div>
+  <div class="card"><div class="row between"><h2>Budget used</h2><span class="badge ${os.k}">${os.i ? os.i + ' ' : ''}${os.t}</span></div>
+  <div class="bar ${os.k}" role="progressbar" aria-valuenow="${op == null ? 0 : Math.round(Math.min(op, 100))}" aria-valuemin="0" aria-valuemax="100" aria-label="Overall budget used"><i style="width:${op == null ? 0 : Math.min(100, op)}%"></i></div>
+  <div class="small muted">${op == null ? 'Set category budgets to track usage.' : idr(ts) + ' of ' + idr(tb) + ' · <b style="color:var(--text)">' + Math.round(op) + '%</b>'}</div></div>
   <div class="sec"><h2>Spending by category</h2></div>
-  <div class="card">${all===0?`<div class="empty"><b>No spending this month</b>Add an expense to see your breakdown.</div>`:
-  `<div class="bb">${spend.map(r=>`<i style="width:${r.spent/all*100}%;background:${r.color}"></i>`).join('')}${unc>0?`<i style="width:${unc/all*100}%;background:var(--muted)"></i>`:''}</div>
-  <div class="list">${spend.map(r=>`<div class="item">${icon(r,true)}<div class="grow"><div style="font-weight:600">${esc(r.name)}</div><div class="small muted">${Math.round(r.spent/all*100)}% of spending</div></div><div class="amt">${idr(r.spent)}</div></div>`).join('')}
-  ${unc>0?`<div class="item">${icon(null)}<div class="grow"><div style="font-weight:600">Uncategorized</div></div><div class="amt">${idr(unc)}</div></div>`:''}</div>`}</div>
+  <div class="card">${all === 0 ? `<div class="empty"><b>No spending this month</b>Add an expense to see your breakdown.</div>` :
+          `<div class="bb">${spend.map(r => `<i style="width:${r.spent / all * 100}%;background:${r.color}"></i>`).join('')}${unc > 0 ? `<i style="width:${unc / all * 100}%;background:var(--muted)"></i>` : ''}</div>
+  <div class="list">${spend.map(r => `<div class="item">${icon(r, true)}<div class="grow"><div style="font-weight:600">${esc(r.name)}</div><div class="small muted">${Math.round(r.spent / all * 100)}% of spending</div></div><div class="amt">${idr(r.spent)}</div></div>`).join('')}
+  ${unc > 0 ? `<div class="item">${icon(null)}<div class="grow"><div style="font-weight:600">Uncategorized</div></div><div class="amt">${idr(unc)}</div></div>` : ''}</div>`}</div>
   <div class="sec"><h2>Recent</h2><button class="link" data-act="goto" data-v="tx">See all</button></div>
-  <div class="card">${recent.length?`<div class="list">${recent.map(txItem).join('')}</div>`:`<div class="empty"><b>No transactions yet</b>Tap “Add” to record income or an expense.</div>`}</div>`}
+  <div class="card">${recent.length ? `<div class="list">${recent.map(txItem).join('')}</div>` : `<div class="empty"><b>No transactions yet</b>Tap “Add” to record income or an expense.</div>`}</div>`
+    }
 
-function txView(){
-  let l=S.tx.slice();
-  if(F.month)l=l.filter(t=>monthOf(t.date)===F.month);
-  if(F.type!=='all')l=l.filter(t=>t.type===F.type);
-  if(F.cat!=='all')l=l.filter(t=>F.cat==='none'?(t.type==='expense'&&!catOf(t.cat)):t.cat===F.cat);
-  l.sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-  const inc=Calc.sum(l,'income'),exp=Calc.sum(l,'expense');
-  let h='',last='';
-  l.forEach(t=>{if(t.date!==last){last=t.date;h+=`<div class="day">${dLabel(t.date)}</div>`}h+=`<div class="card" style="padding:0 16px;margin-bottom:6px"><div class="list">${txItem(t)}</div></div>`});
-  return`<div class="head"><h1>Transactions</h1></div>
-  <div class="filters"><input type="month" id="fm" value="${F.month}" aria-label="Month"><select id="ft" aria-label="Type"><option value="all">All types</option><option value="income"${F.type==='income'?' selected':''}>Income</option><option value="expense"${F.type==='expense'?' selected':''}>Expenses</option></select>
-  <select id="fc" aria-label="Category"><option value="all">All categories</option>${S.cats.map(c=>`<option value="${c.id}"${F.cat===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}<option value="none"${F.cat==='none'?' selected':''}>Uncategorized</option></select></div>
-  ${F.month?'':''}<div class="small muted" style="margin:0 2px 4px">${l.length} transaction${l.length===1?'':'s'} · <span class="pos">+${idr(inc)}</span> · <span class="neg">−${idr(exp)}</span>${F.month?'':' · <b>all months</b>'}</div>
-  ${l.length?h:`<div class="card empty"><b>Nothing matches</b>Try another month or clear a filter.</div>`}`}
+    function txView() {
+      let l = S.tx.slice();
+      if (F.month) l = l.filter(t => monthOf(t.date) === F.month);
+      if (F.type !== 'all') l = l.filter(t => t.type === F.type);
+      if (F.cat !== 'all') l = l.filter(t => F.cat === 'none' ? (t.type === 'expense' && !catOf(t.cat)) : t.cat === F.cat);
+      l.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+      const inc = Calc.sum(l, 'income'), exp = Calc.sum(l, 'expense');
+      let h = '', last = '';
+      l.forEach(t => { if (t.date !== last) { last = t.date; h += `<div class="day">${dLabel(t.date)}</div>` } h += `<div class="card" style="padding:0 16px;margin-bottom:6px"><div class="list">${txItem(t)}</div></div>` });
+      return `<div class="head"><h1>Transactions</h1></div>
+  <div class="filters"><input type="month" id="fm" value="${F.month}" aria-label="Month"><select id="ft" aria-label="Type"><option value="all">All types</option><option value="income"${F.type === 'income' ? ' selected' : ''}>Income</option><option value="expense"${F.type === 'expense' ? ' selected' : ''}>Expenses</option></select>
+  <select id="fc" aria-label="Category"><option value="all">All categories</option>${S.cats.map(c => `<option value="${c.id}"${F.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}<option value="none"${F.cat === 'none' ? ' selected' : ''}>Uncategorized</option></select></div>
+  ${F.month ? '' : ''}<div class="small muted" style="margin:0 2px 4px">${l.length} transaction${l.length === 1 ? '' : 's'} · <span class="pos">+${idr(inc)}</span> · <span class="neg">−${idr(exp)}</span>${F.month ? '' : ' · <b>all months</b>'}</div>
+  ${l.length ? h : `<div class="card empty"><b>Nothing matches</b>Try another month or clear a filter.</div>`}`
+    }
 
-function budgetsView(){
-  const rows=Calc.catRows(month).sort((a,b)=>(b.primary!==false)-(a.primary!==false));
-  return monthHead('Budgets')+(rows.length?rows.map(budgetRow).join(''):`<div class="card empty"><b>No categories yet</b>Create one to start budgeting.</div>`)+
-  `<button class="btn" style="width:100%" data-act="newcat">+ New category</button>`}
+    function budgetsView() {
+      const rows = Calc.catRows(month).sort((a, b) => (b.primary !== false) - (a.primary !== false));
+      return monthHead('Budgets') + (rows.length ? rows.map(budgetRow).join('') : `<div class="card empty"><b>No categories yet</b>Create one to start budgeting.</div>`) +
+        `<button class="btn" style="width:100%" data-act="newcat">+ New category</button>`
+    }
 
-function settingsView(){
-  let legacy=false;try{const o=JSON.parse(localStorage.getItem(KEY));legacy=!!(o&&Array.isArray(o.tx)&&o.tx.length)}catch(e){}
-  return`<div class="head"><h1>Settings</h1></div>
+    function settingsView() {
+      let legacy = false; try { const o = JSON.parse(localStorage.getItem(KEY)); legacy = !!(o && Array.isArray(o.tx) && o.tx.length) } catch (e) { }
+      return `<div class="head"><h1>Settings</h1></div>
   <div class="card"><h2>Sync</h2><p class="small muted" style="margin:4px 0 0">Your data is saved to your account and loads on any device you sign in on. Changes made offline stay on this device and upload when you reconnect. Other devices pick up changes when you reopen the app or tap Sync now.</p><div class="acts"><button class="btn" data-act="syncnow">Sync now</button></div></div>
   <div class="card"><h2>Currency</h2><p class="small muted" style="margin:4px 0 0">Indonesian Rupiah (IDR). Amounts are whole rupiah.</p></div>
   <div class="card"><h2>Your data</h2><p class="small muted">Export a backup file, or import one made earlier.</p>
-  <div class="acts" style="flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="importfile">Import backup file</button>${legacy?'<button class="btn" data-act="importlocal">Import data saved in this browser</button>':''}<button class="btn del" data-act="wipe">Erase everything</button></div>
+  <div class="acts" style="flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="importfile">Import backup file</button>${legacy ? '<button class="btn" data-act="importlocal">Import data saved in this browser</button>' : ''}<button class="btn del" data-act="wipe">Erase everything</button></div>
   <input type="file" id="imp" accept="application/json,.json" hidden></div>`}
 
-function askImport(o){
-  const rid=id=>/^c\d+$/.test(String(id))?String(id)+'-'+user.id.slice(0,8):String(id);
-  const cats=(o&&Array.isArray(o.cats)?o.cats:[]).filter(c=>c&&c.id&&typeof c.name==='string'&&c.name.trim()).map(c=>({id:rid(c.id),name:c.name.trim().slice(0,30),icon:c.icon||'•',color:c.color||TONES[0],budget:Math.max(0,Math.round(Number(c.budget))||0),primary:c.primary!==false,month:/^\d{4}-\d{2}$/.test(c.month||'')?c.month:''}));
-  const tx=(o&&Array.isArray(o.tx)?o.tx:[]).filter(t=>t&&t.id&&(t.type==='income'||t.type==='expense')&&Number(t.amount)>0&&/^\d{4}-\d{2}-\d{2}$/.test(t.date)).map(t=>({id:String(t.id),type:t.type,amount:Math.round(Number(t.amount)),date:t.date,cat:t.cat?rid(t.cat):'',source:String(t.source||'').slice(0,40),desc:String(t.desc||'').slice(0,80)}));
-  if(!cats.length&&!tx.length){toast('No valid data found in that file');return}
-  confirmDlg(`Add ${tx.length} transaction${tx.length===1?'':'s'} and ${cats.length} categor${cats.length===1?'y':'ies'} to your account? Items that already exist are updated; nothing is removed.`,'Import',()=>{
-    const merge=(a,b)=>{const m=new Map(a.map(x=>[x.id,x]));b.forEach(x=>m.set(x.id,x));return[...m.values()]};
-    S.cats=merge(S.cats,cats);S.tx=merge(S.tx,tx);save();render();toast('Imported')},false)}
+    function askImport(o) {
+      const rid = id => /^c\d+$/.test(String(id)) ? String(id) + '-' + user.id.slice(0, 8) : String(id);
+      const cats = (o && Array.isArray(o.cats) ? o.cats : []).filter(c => c && c.id && typeof c.name === 'string' && c.name.trim()).map(c => ({ id: rid(c.id), name: c.name.trim().slice(0, 30), icon: c.icon || '•', color: c.color || TONES[0], budget: Math.max(0, Math.round(Number(c.budget)) || 0), primary: c.primary !== false, month: /^\d{4}-\d{2}$/.test(c.month || '') ? c.month : '' }));
+      const tx = (o && Array.isArray(o.tx) ? o.tx : []).filter(t => t && t.id && (t.type === 'income' || t.type === 'expense') && Number(t.amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(t.date)).map(t => ({ id: String(t.id), type: t.type, amount: Math.round(Number(t.amount)), date: t.date, cat: t.cat ? rid(t.cat) : '', source: String(t.source || '').slice(0, 40), desc: String(t.desc || '').slice(0, 80) }));
+      if (!cats.length && !tx.length) { toast('No valid data found in that file'); return }
+      confirmDlg(`Add ${tx.length} transaction${tx.length === 1 ? '' : 's'} and ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'} to your account? Items that already exist are updated; nothing is removed.`, 'Import', () => {
+        const merge = (a, b) => { const m = new Map(a.map(x => [x.id, x])); b.forEach(x => m.set(x.id, x)); return [...m.values()] };
+        S.cats = merge(S.cats, cats); S.tx = merge(S.tx, tx); save(); render(); toast('Imported')
+      }, false)
+    }
 
-function authView(){const up=authMode==='up';
-  return`<div style="max-width:380px;margin:8vh auto 0"><h1 style="font-size:26px;margin-bottom:6px">Ledger</h1><p class="muted" style="margin:0 0 18px">${up?'Create an account to sync your finances across devices.':'Sign in to load your finances on this device.'}</p>
+    function authView() {
+      const up = authMode === 'up';
+      return `<div style="max-width:380px;margin:8vh auto 0"><h1 style="font-size:26px;margin-bottom:6px">Ledger</h1><p class="muted" style="margin:0 0 18px">${up ? 'Create an account to sync your finances across devices.' : 'Sign in to load your finances on this device.'}</p>
   <div class="card"><form id="af" novalidate><label for="ae" style="margin-top:0">Email</label><input id="ae" type="email" autocomplete="email" inputmode="email">
-  <label for="ap">Password</label><input id="ap" type="password" autocomplete="${up?'new-password':'current-password'}" placeholder="At least 6 characters">
-  <div class="err" id="aerr" role="alert"></div><div class="acts"><button class="btn pri">${up?'Create account':'Sign in'}</button></div></form></div>
-  <button class="link" data-act="authmode" style="width:100%">${up?'Already have an account? Sign in':'New here? Create an account'}</button></div>`}
-function render(){
-  const out=!user,wait=booting||(user&&!loaded);
-  document.getElementById('nav').hidden=out||wait;document.getElementById('fab').hidden=out||wait;document.body.classList.toggle('out',out||wait);
-  const app=document.getElementById('app');
-  if(wait){
-    app.innerHTML=(user&&!booting&&syncState==='error')
-      ?`<div class="loader" role="alert"><div class="lt">Can't reach the server</div><div class="small muted">Check your connection and try again.${lastErr?'<br>'+esc(lastErr):''}</div><button class="btn pri" data-act="retry" style="margin-top:8px">Try again</button></div>`
-      :`<div class="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><div class="lt">Ledger</div><div class="small muted">Loading your finances…</div></div>`;
-    return}
-  if(out){app.innerHTML=authView();return}
-  document.getElementById('nav').innerHTML=TABS.map(([k,n,p])=>`<button data-act="goto" data-v="${k}" ${view===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>${n}</button>`).join('');
-  app.innerHTML=`<div id="sy" class="sync ${syncState}">${syText(syncState)}</div>`+{home,tx:txView,budgets:budgetsView,settings:settingsView}[view]();
-}
+  <label for="ap">Password</label><input id="ap" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="At least 6 characters">
+  <div class="err" id="aerr" role="alert"></div><div class="acts"><button class="btn pri">${up ? 'Create account' : 'Sign in'}</button></div></form></div>
+  <button class="link" data-act="authmode" style="width:100%">${up ? 'Already have an account? Sign in' : 'New here? Create an account'}</button></div>`
+    }
+    function render() {
+      const out = !user, wait = booting || (user && !loaded);
+      document.getElementById('nav').hidden = out || wait; document.getElementById('fab').hidden = out || wait; document.body.classList.toggle('out', out || wait);
+      const app = document.getElementById('app');
+      if (wait) {
+        app.innerHTML = (user && !booting && syncState === 'error')
+          ? `<div class="loader" role="alert"><div class="lt">Can't reach the server</div><div class="small muted">Check your connection and try again.${lastErr ? '<br>' + esc(lastErr) : ''}</div><button class="btn pri" data-act="retry" style="margin-top:8px">Try again</button></div>`
+          : `<div class="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><div class="lt">Ledger</div><div class="small muted">Manifesting 3 digits salary per day, amen</div></div>`;
+        return
+      }
+      if (out) { app.innerHTML = authView(); return }
+      document.getElementById('nav').innerHTML = TABS.map(([k, n, p]) => `<button data-act="goto" data-v="${k}" ${view === k ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>${n}</button>`).join('');
+      app.innerHTML = `<div id="sy" class="sync ${syncState}">${syText(syncState)}</div>` + { home, tx: txView, budgets: budgetsView, settings: settingsView }[view]();
+    }
 
-/* ---------- Dialogs ---------- */
-const dlg=$('#dlg');
-const dlg2=$('#dlg2');let dirtyCheck=null;
-function openDlg(h){dlg.innerHTML=h;if(!dlg.open)dlg.showModal()}
-function openDlg2(h){dlg2.innerHTML=h;if(!dlg2.open)dlg2.showModal()}
-function closeDlg(){dirtyCheck=null;if(dlg2.open)dlg2.close();if(dlg.open)dlg.close()}
-function tryClose(){if(dlg.open&&dirtyCheck&&dirtyCheck())askDiscard();else closeDlg()}
-function askDiscard(){openDlg2(`<h1 style="font-size:18px">Discard changes?</h1><p class="muted">What you've entered hasn't been saved yet.</p><div class="acts"><button class="btn del" data-act="discard">Discard</button><button class="btn pri" data-act="close2">Keep editing</button></div>`)}
-const fmtInput=v=>{const n=String(v).replace(/\D/g,'');return n?Number(n).toLocaleString('id-ID'):''};
-const parseAmt=v=>Number(String(v).replace(/\D/g,''))||0;
+    /* ---------- Dialogs ---------- */
+    const dlg = $('#dlg');
+    const dlg2 = $('#dlg2'); let dirtyCheck = null;
+    function openDlg(h) { dlg.innerHTML = h; if (!dlg.open) dlg.showModal() }
+    function openDlg2(h) { dlg2.innerHTML = h; if (!dlg2.open) dlg2.showModal() }
+    function closeDlg() { dirtyCheck = null; if (dlg2.open) dlg2.close(); if (dlg.open) dlg.close() }
+    function tryClose() { if (dlg.open && dirtyCheck && dirtyCheck()) askDiscard(); else closeDlg() }
+    function askDiscard() { openDlg2(`<h1 style="font-size:18px">Discard changes?</h1><p class="muted">What you've entered hasn't been saved yet.</p><div class="acts"><button class="btn del" data-act="discard">Discard</button><button class="btn pri" data-act="close2">Keep editing</button></div>`) }
+    const fmtInput = v => { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('id-ID') : '' };
+    const parseAmt = v => Number(String(v).replace(/\D/g, '')) || 0;
 
-function txForm(id){
-  const t=id?S.tx.find(x=>x.id===id):null;let type=t?t.type:'expense';
-  const d=t||{amount:'',cat:(S.cats.find(c=>c.primary!==false)||S.cats[0])?.id||'',date:today(),desc:'',source:''};
-  const body=()=>`
-  <label for="fa">Amount (IDR)</label><input id="fa" inputmode="numeric" autocomplete="off" placeholder="0" value="${d.amount?fmtInput(d.amount):''}"><div class="err" id="ea"></div>
-  ${type==='expense'?`<label for="fcat">Category</label><select id="fcat">${catOptions(d.cat)}</select><div class="err" id="ec"></div>`
-  :`<label for="fs">Source</label><input id="fs" maxlength="40" placeholder="e.g. Salary" value="${esc(d.source)}"><div class="err" id="es"></div>`}
+    function txForm(id) {
+      const t = id ? S.tx.find(x => x.id === id) : null; let type = t ? t.type : 'expense';
+      const d = t || { amount: '', cat: (S.cats.find(c => c.primary !== false) || S.cats[0])?.id || '', date: today(), desc: '', source: '' };
+      const body = () => `
+  <label for="fa">Amount (IDR)</label><input id="fa" inputmode="numeric" autocomplete="off" placeholder="0" value="${d.amount ? fmtInput(d.amount) : ''}"><div class="err" id="ea"></div>
+  ${type === 'expense' ? `<label for="fcat">Category</label><select id="fcat">${catOptions(d.cat)}</select><div class="err" id="ec"></div>`
+          : `<label for="fs">Source</label><input id="fs" maxlength="40" placeholder="e.g. Salary" value="${esc(d.source)}"><div class="err" id="es"></div>`}
   <label for="fd">Date</label><input id="fd" type="date" value="${d.date}"><div class="err" id="ed"></div>
   <label for="fn">Description <span class="muted" style="font-weight:400">(optional)</span></label><input id="fn" maxlength="80" value="${esc(d.desc)}">
-  <div class="acts">${t?`<button type="button" class="btn del" data-act="deltx" data-id="${t.id}">Delete</button>`:`<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${t?'Save changes':'Add transaction'}</button></div>`;
-  const draw=()=>{
-    openDlg(`<form id="tf" novalidate><h1 style="font-size:18px">${t?'Edit transaction':'Add transaction'}</h1>
-    <div class="seg" role="group" aria-label="Type"><button type="button" data-t="expense" aria-pressed="${type==='expense'}">Expense</button><button type="button" data-t="income" aria-pressed="${type==='income'}">Income</button></div>${body()}</form>`);
-    const fa=$('#fa');fa.oninput=()=>{fa.value=fmtInput(fa.value)};
-    dlg.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{d.amount=parseAmt($('#fa').value);d.date=$('#fd').value;d.desc=$('#fn').value;if(type==='expense'&&$('#fcat'))d.cat=$('#fcat').value;if(type==='income'&&$('#fs'))d.source=$('#fs').value;type=b.dataset.t;draw()});
-    $('#tf').onsubmit=e=>{e.preventDefault();
-      const amount=parseAmt($('#fa').value),date=$('#fd').value;let ok=true;
-      const set=(i,m)=>{$(i).textContent=m;if(m)ok=false};
-      set('#ea',amount>0?'':'Enter an amount greater than 0.');
-      set('#ed',/^\d{4}-\d{2}-\d{2}$/.test(date)?'':'Choose a valid date.');
-      if(type==='expense')set('#ec',$('#fcat')&&$('#fcat').value?'':'Create a category first in Budgets.');
-      else set('#es',$('#fs').value.trim()?'':'Enter where the income came from.');
-      if(!ok)return;
-      const rec={id:t?t.id:uid(),type,amount,date,desc:$('#fn').value.trim(),cat:type==='expense'?$('#fcat').value:'',source:type==='income'?$('#fs').value.trim():''};
-      if(t)Object.assign(t,rec);else S.tx.push(rec);
-      save();closeDlg();month=monthOf(date);if(view==='tx')F.month=F.month?month:'';render();toast(t?'Saved':'Added')};
-    setTimeout(()=>$('#fa').focus(),30)};
-  draw();
-  const cur=()=>JSON.stringify([type,$('#fa')?$('#fa').value:'',$('#fcat')?$('#fcat').value:'',$('#fs')?$('#fs').value:'',$('#fd')?$('#fd').value:'',$('#fn')?$('#fn').value:'']);
-  const init=cur();dirtyCheck=()=>cur()!==init}
+  <div class="acts">${t ? `<button type="button" class="btn del" data-act="deltx" data-id="${t.id}">Delete</button>` : `<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${t ? 'Save changes' : 'Add transaction'}</button></div>`;
+      const draw = () => {
+        openDlg(`<form id="tf" novalidate><h1 style="font-size:18px">${t ? 'Edit transaction' : 'Add transaction'}</h1>
+    <div class="seg" role="group" aria-label="Type"><button type="button" data-t="expense" aria-pressed="${type === 'expense'}">Expense</button><button type="button" data-t="income" aria-pressed="${type === 'income'}">Income</button></div>${body()}</form>`);
+        const fa = $('#fa'); fa.oninput = () => { fa.value = fmtInput(fa.value) };
+        dlg.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { d.amount = parseAmt($('#fa').value); d.date = $('#fd').value; d.desc = $('#fn').value; if (type === 'expense' && $('#fcat')) d.cat = $('#fcat').value; if (type === 'income' && $('#fs')) d.source = $('#fs').value; type = b.dataset.t; draw() });
+        $('#tf').onsubmit = e => {
+          e.preventDefault();
+          const amount = parseAmt($('#fa').value), date = $('#fd').value; let ok = true;
+          const set = (i, m) => { $(i).textContent = m; if (m) ok = false };
+          set('#ea', amount > 0 ? '' : 'Enter an amount greater than 0.');
+          set('#ed', /^\d{4}-\d{2}-\d{2}$/.test(date) ? '' : 'Choose a valid date.');
+          if (type === 'expense') set('#ec', $('#fcat') && $('#fcat').value ? '' : 'Create a category first in Budgets.');
+          else set('#es', $('#fs').value.trim() ? '' : 'Enter where the income came from.');
+          if (!ok) return;
+          const rec = { id: t ? t.id : uid(), type, amount, date, desc: $('#fn').value.trim(), cat: type === 'expense' ? $('#fcat').value : '', source: type === 'income' ? $('#fs').value.trim() : '' };
+          if (t) Object.assign(t, rec); else S.tx.push(rec);
+          save(); closeDlg(); month = monthOf(date); if (view === 'tx') F.month = F.month ? month : ''; render(); toast(t ? 'Saved' : 'Added')
+        };
+        setTimeout(() => $('#fa').focus(), 30)
+      };
+      draw();
+      const cur = () => JSON.stringify([type, $('#fa') ? $('#fa').value : '', $('#fcat') ? $('#fcat').value : '', $('#fs') ? $('#fs').value : '', $('#fd') ? $('#fd').value : '', $('#fn') ? $('#fn').value : '']);
+      const init = cur(); dirtyCheck = () => cur() !== init
+    }
 
-function catForm(id){
-  const c=id?S.cats.find(x=>x.id===id):null;let ic=c?c.icon:ICONS[0],col=c?c.color:TONES[0];
-  const low=v=>String(v).toLowerCase(),isCustom=()=>!TONES.some(t=>low(t)===low(col));
-  const validEmoji=g=>/[\p{Extended_Pictographic}\p{Regional_Indicator}\u20E3]/u.test(g);
-  const first=v=>{v=v.trim();if(!v)return'';if(typeof Intl!=='undefined'&&Intl.Segmenter){const r=new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(v)[Symbol.iterator]().next();return r.done?'':r.value.segment}return Array.from(v)[0]||''};
-  const prim0=c?c.primary!==false:true;
-  const moFor=p=>(!c||(c.primary!==false&&!p)||!c.month)?month:c.month;
-  const hint=on=>on?'Appears every month with this budget.':'Appears only in '+mLabel(moFor(false))+' and in months where it has spending.';
-  openDlg(`<form id="cf" novalidate><h1 style="font-size:18px">${c?'Edit category':'New category'}</h1>
-  <label for="cn">Name</label><input id="cn" maxlength="30" value="${esc(c?c.name:'')}"><div class="err" id="en"></div>
-  <label for="cb">Monthly budget (IDR)</label><input id="cb" inputmode="numeric" placeholder="0" value="${c&&c.budget?fmtInput(c.budget):''}"><div class="err" id="eb"></div>
-  <div class="sw2"><div><label for="cprim" style="margin:0">Primary category</label><div class="small muted" id="chint">${hint(prim0)}</div></div><input type="checkbox" id="cprim" role="switch" ${prim0?'checked':''}></div>
+    function catForm(id) {
+      const c = id ? S.cats.find(x => x.id === id) : null; let ic = c ? c.icon : ICONS[0], col = c ? c.color : TONES[0];
+      const low = v => String(v).toLowerCase(), isCustom = () => !TONES.some(t => low(t) === low(col));
+      const validEmoji = g => /[\p{Extended_Pictographic}\p{Regional_Indicator}\u20E3]/u.test(g);
+      const first = v => { v = v.trim(); if (!v) return ''; if (typeof Intl !== 'undefined' && Intl.Segmenter) { const r = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(v)[Symbol.iterator]().next(); return r.done ? '' : r.value.segment } return Array.from(v)[0] || '' };
+      const prim0 = c ? c.primary !== false : true;
+      const moFor = p => (!c || (c.primary !== false && !p) || !c.month) ? month : c.month;
+      const hint = on => on ? 'Appears every month with this budget.' : 'Appears only in ' + mLabel(moFor(false)) + ' and in months where it has spending.';
+      openDlg(`<form id="cf" novalidate><h1 style="font-size:18px">${c ? 'Edit category' : 'New category'}</h1>
+  <label for="cn">Name</label><input id="cn" maxlength="30" value="${esc(c ? c.name : '')}"><div class="err" id="en"></div>
+  <label for="cb">Monthly budget (IDR)</label><input id="cb" inputmode="numeric" placeholder="0" value="${c && c.budget ? fmtInput(c.budget) : ''}"><div class="err" id="eb"></div>
+  <div class="sw2"><div><label for="cprim" style="margin:0">Primary category</label><div class="small muted" id="chint">${hint(prim0)}</div></div><input type="checkbox" id="cprim" role="switch" ${prim0 ? 'checked' : ''}></div>
   <label for="ci">Icon</label>
   <div class="row" style="margin-bottom:10px"><div class="ico" id="ip" aria-hidden="true" style="width:46px;height:46px;font-size:24px">${esc(ic)}</div><input id="ci" placeholder="Type or paste any emoji" autocomplete="off" aria-label="Custom emoji"></div>
-  <label>Color</label><div class="sw">${TONES.map(t=>`<button type="button" data-c="${t}" style="background:${t}" aria-pressed="${low(t)===low(col)}" aria-label="Color ${t}"></button>`).join('')}<input type="color" id="ccol" value="${col}" data-on="${isCustom()}" aria-label="Custom color" title="Custom color"></div>
-  <div class="acts">${c?`<button type="button" class="btn del" data-act="delcat" data-id="${c.id}">Delete</button>`:`<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${c?'Save changes':'Create category'}</button></div></form>`);
-  const cb=$('#cb'),ci=$('#ci'),ip=$('#ip'),cc=$('#ccol');
-  cb.oninput=()=>{cb.value=fmtInput(cb.value)};
-  const syncIc=()=>{ip.textContent=ic;dlg.querySelectorAll('[data-i]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.i===ic))};
-  ci.oninput=()=>{const g=first(ci.value);if(g&&validEmoji(g)){ic=g;ci.value=g;syncIc()}else ci.value=''};
-  dlg.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ic=b.dataset.i;ci.value='';syncIc()});
-  const syncCol=()=>{dlg.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed',low(x.dataset.c)===low(col)));cc.dataset.on=String(isCustom())};
-  dlg.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{col=b.dataset.c;cc.value=col;syncCol()});
-  cc.oninput=()=>{col=cc.value;syncCol()};
-  const cp=$('#cprim'),ch=$('#chint');cp.onchange=()=>{ch.textContent=hint(cp.checked)};
-  $('#cf').onsubmit=e=>{e.preventDefault();
-    const name=$('#cn').value.trim(),dup=S.cats.some(x=>x.id!==(c&&c.id)&&x.name.toLowerCase()===name.toLowerCase());
-    $('#en').textContent=!name?'Enter a name.':dup?'A category with this name already exists.':'';
-    if(!name||dup)return;
-    const rec={name,icon:ic,color:/^#[0-9a-f]{6}$/i.test(col)?col:TONES[0],budget:parseAmt(cb.value),primary:cp.checked,month:moFor(cp.checked)};
-    if(c)Object.assign(c,rec);else S.cats.push({id:uid(),...rec});
-    save();closeDlg();render();toast(c?'Saved':'Category created')};
-  const cur=()=>JSON.stringify([$('#cn').value,cb.value,ic,col,cp.checked]);
-  const init=cur();dirtyCheck=()=>cur()!==init;
-  setTimeout(()=>$('#cn').focus(),30)}
+  <div class="ic">${ICONS.map(i => `<button type="button" data-i="${i}" aria-pressed="${i === ic}" aria-label="Icon ${i}">${i}</button>`).join('')}</div>
+  <label>Color</label><div class="sw">${TONES.map(t => `<button type="button" data-c="${t}" style="background:${t}" aria-pressed="${low(t) === low(col)}" aria-label="Color ${t}"></button>`).join('')}<input type="color" id="ccol" value="${col}" data-on="${isCustom()}" aria-label="Custom color" title="Custom color"></div>
+  <div class="acts">${c ? `<button type="button" class="btn del" data-act="delcat" data-id="${c.id}">Delete</button>` : `<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${c ? 'Save changes' : 'Create category'}</button></div></form>`);
+      const cb = $('#cb'), ci = $('#ci'), ip = $('#ip'), cc = $('#ccol');
+      cb.oninput = () => { cb.value = fmtInput(cb.value) };
+      const syncIc = () => { ip.textContent = ic; dlg.querySelectorAll('[data-i]').forEach(x => x.setAttribute('aria-pressed', x.dataset.i === ic)) };
+      ci.oninput = () => { const g = first(ci.value); if (g && validEmoji(g)) { ic = g; ci.value = g; syncIc() } else ci.value = '' };
+      dlg.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { ic = b.dataset.i; ci.value = ''; syncIc() });
+      const syncCol = () => { dlg.querySelectorAll('[data-c]').forEach(x => x.setAttribute('aria-pressed', low(x.dataset.c) === low(col))); cc.dataset.on = String(isCustom()) };
+      dlg.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { col = b.dataset.c; cc.value = col; syncCol() });
+      cc.oninput = () => { col = cc.value; syncCol() };
+      const cp = $('#cprim'), ch = $('#chint'); cp.onchange = () => { ch.textContent = hint(cp.checked) };
+      $('#cf').onsubmit = e => {
+        e.preventDefault();
+        const name = $('#cn').value.trim(), dup = S.cats.some(x => x.id !== (c && c.id) && x.name.toLowerCase() === name.toLowerCase());
+        $('#en').textContent = !name ? 'Enter a name.' : dup ? 'A category with this name already exists.' : '';
+        if (!name || dup) return;
+        const rec = { name, icon: ic, color: /^#[0-9a-f]{6}$/i.test(col) ? col : TONES[0], budget: parseAmt(cb.value), primary: cp.checked, month: moFor(cp.checked) };
+        if (c) Object.assign(c, rec); else S.cats.push({ id: uid(), ...rec });
+        save(); closeDlg(); render(); toast(c ? 'Saved' : 'Category created')
+      };
+      const cur = () => JSON.stringify([$('#cn').value, cb.value, ic, col, cp.checked]);
+      const init = cur(); dirtyCheck = () => cur() !== init;
+      setTimeout(() => $('#cn').focus(), 30)
+    }
 
-function confirmDlg(msg,label,fn,danger=true){
-  openDlg2(`<h1 style="font-size:18px">${esc(label)}?</h1><p class="muted">${esc(msg)}</p><div class="acts"><button class="btn" data-act="close2">Cancel</button><button class="btn pri" id="ok" style="${danger?'background:var(--exp);border-color:var(--exp)':''}">${esc(label)}</button></div>`);
-  $('#ok').onclick=()=>{fn();closeDlg()}}
+    function confirmDlg(msg, label, fn, danger = true) {
+      openDlg2(`<h1 style="font-size:18px">${esc(label)}?</h1><p class="muted">${esc(msg)}</p><div class="acts"><button class="btn" data-act="close2">Cancel</button><button class="btn pri" id="ok" style="${danger ? 'background:var(--exp);border-color:var(--exp)' : ''}">${esc(label)}</button></div>`);
+      $('#ok').onclick = () => { fn(); closeDlg() }
+    }
 
-/* ---------- Events ---------- */
-document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id;
-  if(a==='goto'){view=b.dataset.v;window.scrollTo(0,0);render()}
-  else if(a==='pm'){month=shift(month,-1);render()}
-  else if(a==='nm'){month=shift(month,1);render()}
-  else if(a==='edit')txForm(id);
-  else if(a==='editcat')catForm(id);
-  else if(a==='newcat')catForm();
-  else if(a==='close')tryClose();
-  else if(a==='retry'){enter(user)}
-  else if(a==='close2')dlg2.close();
-  else if(a==='discard')closeDlg();
-  else if(a==='deltx')confirmDlg('This removes the transaction and updates all totals.','Delete',()=>{S.tx=S.tx.filter(t=>t.id!==id);save();render();toast('Deleted')});
-  else if(a==='delcat'){const n=S.tx.filter(t=>t.cat===id).length;confirmDlg(n?`${n} transaction${n>1?'s':''} will stay in your history as “Uncategorized”.`:'This category has no transactions.','Delete',()=>{S.cats=S.cats.filter(c=>c.id!==id);if(F.cat===id)F.cat='all';save();render();toast('Deleted')})}
-  else if(a==='syncnow')refresh(true);
-  else if(a==='importfile')$('#imp').click();
-  else if(a==='importlocal'){try{askImport(JSON.parse(localStorage.getItem(KEY)))}catch(e){toast('Could not read the saved data')}}
-  else if(a==='export'){const u=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));const l=document.createElement('a');l.href=u;l.download='ledger-backup.json';l.click();setTimeout(()=>URL.revokeObjectURL(u),500);toast('Backup exported')}
-  else if(a==='wipe')confirmDlg('All transactions and categories will be permanently removed from your account and every device.','Erase',()=>{S={cats:[],tx:[]};save();render();toast('All data erased')});
-});
-document.addEventListener('change',e=>{
-  if(e.target.id==='imp'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{askImport(JSON.parse(r.result))}catch(x){toast('That file is not a valid backup')}};r.readAsText(f);e.target.value=''}
-  if(e.target.id==='fm'){F.month=e.target.value;render()}
-  if(e.target.id==='ft'){F.type=e.target.value;render()}
-  if(e.target.id==='fc'){F.cat=e.target.value;render()}
-});
-$('#fab').onclick=()=>txForm();
-const outside=(e,d)=>{const r=d.getBoundingClientRect();return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom};
-dlg.addEventListener('click',e=>{if(e.target===dlg&&outside(e,dlg))tryClose()});
-dlg2.addEventListener('click',e=>{if(e.target===dlg2&&outside(e,dlg2))dlg2.close()});
-dlg.addEventListener('cancel',e=>{e.preventDefault();tryClose()});
-booting=false;user={id:'app'};enter(user);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh(false)});
-window.addEventListener('online',()=>{if(dirty)sync();else refresh(false)});
-render();
-</script>
+    /* ---------- Events ---------- */
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act, id = b.dataset.id;
+      if (a === 'goto') { view = b.dataset.v; window.scrollTo(0, 0); render() }
+      else if (a === 'pm') { month = shift(month, -1); render() }
+      else if (a === 'nm') { month = shift(month, 1); render() }
+      else if (a === 'edit') txForm(id);
+      else if (a === 'editcat') catForm(id);
+      else if (a === 'newcat') catForm();
+      else if (a === 'close') tryClose();
+      else if (a === 'retry') { enter(user) }
+      else if (a === 'close2') dlg2.close();
+      else if (a === 'discard') closeDlg();
+      else if (a === 'deltx') confirmDlg('This removes the transaction and updates all totals.', 'Delete', () => { S.tx = S.tx.filter(t => t.id !== id); save(); render(); toast('Deleted') });
+      else if (a === 'delcat') { const n = S.tx.filter(t => t.cat === id).length; confirmDlg(n ? `${n} transaction${n > 1 ? 's' : ''} will stay in your history as “Uncategorized”.` : 'This category has no transactions.', 'Delete', () => { S.cats = S.cats.filter(c => c.id !== id); if (F.cat === id) F.cat = 'all'; save(); render(); toast('Deleted') }) }
+      else if (a === 'syncnow') refresh(true);
+      else if (a === 'importfile') $('#imp').click();
+      else if (a === 'importlocal') { try { askImport(JSON.parse(localStorage.getItem(KEY))) } catch (e) { toast('Could not read the saved data') } }
+      else if (a === 'export') { const u = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); const l = document.createElement('a'); l.href = u; l.download = 'ledger-backup.json'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 500); toast('Backup exported') }
+      else if (a === 'wipe') confirmDlg('All transactions and categories will be permanently removed from your account and every device.', 'Erase', () => { S = { cats: [], tx: [] }; save(); render(); toast('All data erased') });
+    });
+    document.addEventListener('change', e => {
+      if (e.target.id === 'imp') { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { askImport(JSON.parse(r.result)) } catch (x) { toast('That file is not a valid backup') } }; r.readAsText(f); e.target.value = '' }
+      if (e.target.id === 'fm') { F.month = e.target.value; render() }
+      if (e.target.id === 'ft') { F.type = e.target.value; render() }
+      if (e.target.id === 'fc') { F.cat = e.target.value; render() }
+    });
+    $('#fab').onclick = () => txForm();
+    const outside = (e, d) => { const r = d.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom };
+    dlg.addEventListener('click', e => { if (e.target === dlg && outside(e, dlg)) tryClose() });
+    dlg2.addEventListener('click', e => { if (e.target === dlg2 && outside(e, dlg2)) dlg2.close() });
+    dlg.addEventListener('cancel', e => { e.preventDefault(); tryClose() });
+    booting = false; user = { id: 'app' }; enter(user);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(false) });
+    window.addEventListener('online', () => { if (dirty) sync(); else refresh(false) });
+    render();
+  </script>
 </body>
+
 </html>
