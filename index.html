@@ -969,9 +969,11 @@
 
     function txItem(t) {
       const c = catOf(t.cat), inc = t.type === 'income';
-      const name = inc ? (t.source || 'Income') : (c ? c.name : 'Uncategorized');
+      const catName = c ? c.name : 'Uncategorized';
+      const name = inc ? (t.source || 'Income') : (t.desc || catName);
+      const sub = inc ? (t.desc || 'Income') : (t.desc ? catName : 'Expense');
       return `<div class="item"><button class="rowbtn" data-act="edit" data-id="${t.id}" aria-label="Edit ${esc(name)}">${inc ? `<div class="ico" aria-hidden="true">↓</div>` : icon(c, true)}
-  <div class="grow"><div style="font-weight:600">${esc(name)}</div><div class="small muted">${esc(t.desc || (inc ? 'Income' : 'Expense'))}</div></div>
+  <div class="grow"><div style="font-weight:600">${esc(name)}</div><div class="small muted">${esc(sub)}</div></div>
   <div class="amt ${inc ? 'i' : 'e'}">${inc ? '+' : '−'}${idr(t.amount)}</div></button>
   <button class="xdel" data-act="deltx" data-id="${t.id}" aria-label="Delete ${esc(name)} transaction">✕</button></div>`
     }
@@ -1111,7 +1113,7 @@
   ${type === 'expense' ? `<label for="fcat">Category</label><select id="fcat">${catOptions(d.cat)}</select><div class="err" id="ec"></div>`
           : `<label for="fs">Source</label><input id="fs" maxlength="40" placeholder="e.g. Salary" value="${esc(d.source)}"><div class="err" id="es"></div>`}
   <label for="fd">Date</label><input id="fd" type="date" value="${d.date}"><div class="err" id="ed"></div>
-  <label for="fn">Description <span class="muted" style="font-weight:400">(optional)</span></label><input id="fn" maxlength="80" value="${esc(d.desc)}">
+  <label for="fn">Description${type === 'expense' ? '' : ' <span class="muted" style="font-weight:400">(optional)</span>'}</label><input id="fn" maxlength="80" aria-required="${type === 'expense'}" placeholder="${type === 'expense' ? 'e.g. Lunch at warung' : ''}" value="${esc(d.desc)}"><div class="err" id="eds"></div>
   <div class="acts">${t ? `<button type="button" class="btn del" data-act="deltx" data-id="${t.id}">Delete</button>` : `<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${t ? 'Save changes' : 'Add transaction'}</button></div>`;
       const draw = () => {
         openDlg(`<form id="tf" novalidate><h1 style="font-size:18px">${t ? 'Edit transaction' : 'Add transaction'}</h1>
@@ -1124,7 +1126,7 @@
           const set = (i, m) => { $(i).textContent = m; if (m) ok = false };
           set('#ea', amount > 0 ? '' : 'Enter an amount greater than 0.');
           set('#ed', /^\d{4}-\d{2}-\d{2}$/.test(date) ? '' : 'Choose a valid date.');
-          if (type === 'expense') set('#ec', $('#fcat') && $('#fcat').value ? '' : 'Create a category first in Budgets.');
+          if (type === 'expense') { set('#ec', $('#fcat') && $('#fcat').value ? '' : 'Create a category first in Budgets.'); set('#eds', $('#fn').value.trim() ? '' : 'Enter a description, like what you bought.') }
           else set('#es', $('#fs').value.trim() ? '' : 'Enter where the income came from.');
           if (!ok) return;
           const rec = { id: t ? t.id : uid(), type, amount, date, desc: $('#fn').value.trim(), cat: type === 'expense' ? $('#fcat').value : '', source: type === 'income' ? $('#fs').value.trim() : '' };
