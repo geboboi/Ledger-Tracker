@@ -118,7 +118,6 @@ dialog input,dialog select,#af input{font-size:16px}
 /* ---------- Data & persistence ---------- */
 const KEY='ledger.v1';
 const TONES=['#78917C','#6F7F6E','#5F8C8A','#7F9FA8','#6F86A8','#8A9AA6','#9A8AA6','#B58AA0','#B96F65','#C48B7A','#D6A45D','#A8A25C','#A89A86','#8C7B6B'];
-const ICONS=['🍚','🚗','🏠','🛍️','💡','🎬','💊','📚','☕','🎁','✈️','🐶','💼','🎮','🏋️','📱','🍔','👶','💇','🧾'];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const pad=n=>String(n).padStart(2,'0');
 const monthOf=d=>d.slice(0,7);
@@ -380,7 +379,6 @@ function catForm(id){
   <div class="sw2"><div><label for="cprim" style="margin:0">Primary category</label><div class="small muted" id="chint">${hint(prim0)}</div></div><input type="checkbox" id="cprim" role="switch" ${prim0?'checked':''}></div>
   <label for="ci">Icon</label>
   <div class="row" style="margin-bottom:10px"><div class="ico" id="ip" aria-hidden="true" style="width:46px;height:46px;font-size:24px">${esc(ic)}</div><input id="ci" placeholder="Type or paste any emoji" autocomplete="off" aria-label="Custom emoji"></div>
-  <div class="ic">${ICONS.map(i=>`<button type="button" data-i="${i}" aria-pressed="${i===ic}" aria-label="Icon ${i}">${i}</button>`).join('')}</div>
   <label>Color</label><div class="sw">${TONES.map(t=>`<button type="button" data-c="${t}" style="background:${t}" aria-pressed="${low(t)===low(col)}" aria-label="Color ${t}"></button>`).join('')}<input type="color" id="ccol" value="${col}" data-on="${isCustom()}" aria-label="Custom color" title="Custom color"></div>
   <div class="acts">${c?`<button type="button" class="btn del" data-act="delcat" data-id="${c.id}">Delete</button>`:`<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${c?'Save changes':'Create category'}</button></div></form>`);
   const cb=$('#cb'),ci=$('#ci'),ip=$('#ip'),cc=$('#ccol');
