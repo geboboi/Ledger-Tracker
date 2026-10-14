@@ -867,9 +867,9 @@
     const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
     let lastErr = '', user = null, loaded = false, booting = true, dirty = false, busy = false, again = false, syncState = 'load', snap = { cats: new Map(), tx: new Map() }, rt;
     const SY = { ok: '● Synced', pending: '○ Saving…', load: '○ Loading…', error: '▲ Offline — saved on this device, will retry' };
-    const toC = c => ({ id: c.id, name: c.name, icon: c.icon, color: c.color, budget: c.budget, is_primary: c.primary !== false, month: c.month || null });
+    const toC = c => ({ id: c.id, name: c.name, icon: c.icon, color: c.color, budget: c.budget, is_primary: c.primary !== false, month: c.month || null, overrides: Object.fromEntries(Object.entries(c.overrides || {}).sort()) });
     const toT = t => ({ id: t.id, type: t.type, amount: t.amount, date: t.date, cat: t.cat || null, source: t.source || null, description: t.desc || '' });
-    const fromC = r => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, budget: Number(r.budget), primary: r.is_primary !== false, month: r.month || '' });
+    const fromC = r => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, budget: Number(r.budget), primary: r.is_primary !== false, month: r.month || '', overrides: (r.overrides && typeof r.overrides === 'object') ? r.overrides : {} });
     const fromT = r => ({ id: r.id, type: r.type, amount: Number(r.amount), date: r.date, cat: r.cat || '', source: r.source || '', desc: r.description || '' });
     const cacheKey = () => 'ledger.v2.' + user.id;
     function cacheWrite() { if (!user) return; try { localStorage.setItem(cacheKey(), JSON.stringify({ cats: S.cats, tx: S.tx, dirty })) } catch (e) { } }
@@ -930,7 +930,8 @@
         const l = this.inMonth(m).filter(t => t.type === 'expense');
         return S.cats.filter(c => c.primary !== false || c.month === m || l.some(t => t.cat === c.id)).map(c => {
           const spent = l.filter(t => t.cat === c.id).reduce((a, t) => a + t.amount, 0);
-          const pct = c.budget > 0 ? spent / c.budget * 100 : null; return { ...c, spent, left: c.budget - spent, pct }
+          const custom = Object.prototype.hasOwnProperty.call(c.overrides || {}, m), b = custom ? Number(c.overrides[m]) || 0 : c.budget;
+          const pct = b > 0 ? spent / b * 100 : null; return { ...c, budget: b, defBudget: c.budget, custom, spent, left: b - spent, pct }
         })
       },
       uncategorized(m) { return this.inMonth(m).filter(t => t.type === 'expense' && !S.cats.some(c => c.id === t.cat)).reduce((a, t) => a + t.amount, 0) },
@@ -982,7 +983,7 @@
       const s = Calc.status(r), w = r.pct == null ? 0 : Math.min(100, r.pct);
       const pctTxt = r.pct == null ? '—' : Math.round(r.pct) + '%';
       return `<div class="card"><div class="row">${icon(r, true)}<div class="grow"><div style="font-weight:600">${esc(r.name)}</div>
-  <div class="small muted">${r.budget > 0 ? 'Budget ' + idr(r.budget) : 'No monthly budget'}${r.primary === false ? ' · One-time' : ''}</div></div>
+  <div class="small muted">${r.budget > 0 ? 'Budget ' + idr(r.budget) : 'No monthly budget'}${r.custom ? ' · Custom this month' : ''}${r.primary === false ? ' · One-time' : ''}</div></div>
   <button class="link" data-act="editcat" data-id="${r.id}">Edit</button></div>
   <div class="bar ${s.k}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(w)}" aria-label="${esc(r.name)} budget used"><i style="width:${w}%"></i></div>
   <div class="row between small"><span>${idr(r.spent)} spent · <b>${pctTxt}</b></span><span class="badge ${s.k}">${s.i ? s.i + ' ' : ''}${s.t}</span></div>
@@ -1062,7 +1063,7 @@
 
     function askImport(o) {
       const rid = id => /^c\d+$/.test(String(id)) ? String(id) + '-' + user.id.slice(0, 8) : String(id);
-      const cats = (o && Array.isArray(o.cats) ? o.cats : []).filter(c => c && c.id && typeof c.name === 'string' && c.name.trim()).map(c => ({ id: rid(c.id), name: c.name.trim().slice(0, 30), icon: c.icon || '•', color: c.color || TONES[0], budget: Math.max(0, Math.round(Number(c.budget)) || 0), primary: c.primary !== false, month: /^\d{4}-\d{2}$/.test(c.month || '') ? c.month : '' }));
+      const cats = (o && Array.isArray(o.cats) ? o.cats : []).filter(c => c && c.id && typeof c.name === 'string' && c.name.trim()).map(c => ({ id: rid(c.id), name: c.name.trim().slice(0, 30), icon: c.icon || '•', color: c.color || TONES[0], budget: Math.max(0, Math.round(Number(c.budget)) || 0), primary: c.primary !== false, month: /^\d{4}-\d{2}$/.test(c.month || '') ? c.month : '', overrides: Object.fromEntries(Object.entries(c.overrides && typeof c.overrides === 'object' ? c.overrides : {}).filter(([k, v]) => /^\d{4}-\d{2}$/.test(k) && Number(v) >= 0).map(([k, v]) => [k, Math.round(Number(v))])) }));
       const tx = (o && Array.isArray(o.tx) ? o.tx : []).filter(t => t && t.id && (t.type === 'income' || t.type === 'expense') && Number(t.amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(t.date)).map(t => ({ id: String(t.id), type: t.type, amount: Math.round(Number(t.amount)), date: t.date, cat: t.cat ? rid(t.cat) : '', source: String(t.source || '').slice(0, 40), desc: String(t.desc || '').slice(0, 80) }));
       if (!cats.length && !tx.length) { toast('No valid data found in that file'); return }
       confirmDlg(`Add ${tx.length} transaction${tx.length === 1 ? '' : 's'} and ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'} to your account? Items that already exist are updated; nothing is removed.`, 'Import', () => {
@@ -1145,12 +1146,14 @@
       const low = v => String(v).toLowerCase(), isCustom = () => !TONES.some(t => low(t) === low(col));
       const validEmoji = g => /[\p{Extended_Pictographic}\p{Regional_Indicator}\u20E3]/u.test(g);
       const first = v => { v = v.trim(); if (!v) return ''; if (typeof Intl !== 'undefined' && Intl.Segmenter) { const r = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(v)[Symbol.iterator]().next(); return r.done ? '' : r.value.segment } return Array.from(v)[0] || '' };
+      const vm = month;
       const prim0 = c ? c.primary !== false : true;
       const moFor = p => (!c || (c.primary !== false && !p) || !c.month) ? month : c.month;
       const hint = on => on ? 'Appears every month with this budget.' : 'Appears only in ' + mLabel(moFor(false)) + ' and in months where it has spending.';
       openDlg(`<form id="cf" novalidate><h1 style="font-size:18px">${c ? 'Edit category' : 'New category'}</h1>
   <label for="cn">Name</label><input id="cn" maxlength="30" value="${esc(c ? c.name : '')}"><div class="err" id="en"></div>
-  <label for="cb">Monthly budget (IDR)</label><input id="cb" inputmode="numeric" placeholder="0" value="${c && c.budget ? fmtInput(c.budget) : ''}"><div class="err" id="eb"></div>
+  <label for="cb">${c ? 'Default monthly budget (IDR)' : 'Monthly budget (IDR)'}</label><input id="cb" inputmode="numeric" placeholder="0" value="${c && c.budget ? fmtInput(c.budget) : ''}"><div class="err" id="eb"></div>
+  ${c ? `<label for="cbm">Budget for ${mLabel(month)} <span class="muted" style="font-weight:400">(this month only)</span></label><input id="cbm" inputmode="numeric" placeholder="Default: ${idr(c.budget)}" value="${c.overrides && Object.prototype.hasOwnProperty.call(c.overrides, month) ? fmtInput(c.overrides[month]) : ''}"><div class="small muted" style="margin-top:4px">Leave empty to use the default budget for this month.</div>` : ''}
   <div class="sw2"><div><label for="cprim" style="margin:0">Primary category</label><div class="small muted" id="chint">${hint(prim0)}</div></div><input type="checkbox" id="cprim" role="switch" ${prim0 ? 'checked' : ''}></div>
   <label for="ci">Icon</label>
   <div class="row" style="margin-bottom:10px"><div class="ico" id="ip" aria-hidden="true" style="width:46px;height:46px;font-size:24px">${esc(ic)}</div><input id="ci" placeholder="Type or paste any emoji" autocomplete="off" aria-label="Custom emoji"></div>
@@ -1159,6 +1162,7 @@
   <div class="acts">${c ? `<button type="button" class="btn del" data-act="delcat" data-id="${c.id}">Delete</button>` : `<button type="button" class="btn" data-act="close">Cancel</button>`}<button class="btn pri">${c ? 'Save changes' : 'Create category'}</button></div></form>`);
       const cb = $('#cb'), ci = $('#ci'), ip = $('#ip'), cc = $('#ccol');
       cb.oninput = () => { cb.value = fmtInput(cb.value) };
+      const cbm = $('#cbm'); if (cbm) cbm.oninput = () => { cbm.value = fmtInput(cbm.value) };
       const syncIc = () => { ip.textContent = ic; dlg.querySelectorAll('[data-i]').forEach(x => x.setAttribute('aria-pressed', x.dataset.i === ic)) };
       ci.oninput = () => { const g = first(ci.value); if (g && validEmoji(g)) { ic = g; ci.value = g; syncIc() } else ci.value = '' };
       dlg.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { ic = b.dataset.i; ci.value = ''; syncIc() });
@@ -1171,11 +1175,13 @@
         const name = $('#cn').value.trim(), dup = S.cats.some(x => x.id !== (c && c.id) && x.name.toLowerCase() === name.toLowerCase());
         $('#en').textContent = !name ? 'Enter a name.' : dup ? 'A category with this name already exists.' : '';
         if (!name || dup) return;
-        const rec = { name, icon: ic, color: /^#[0-9a-f]{6}$/i.test(col) ? col : TONES[0], budget: parseAmt(cb.value), primary: cp.checked, month: moFor(cp.checked) };
+        const ov = { ...((c && c.overrides) || {}) };
+        if (cbm) { if (cbm.value.trim() === '') delete ov[vm]; else ov[vm] = parseAmt(cbm.value) }
+        const rec = { name, icon: ic, color: /^#[0-9a-f]{6}$/i.test(col) ? col : TONES[0], budget: parseAmt(cb.value), primary: cp.checked, month: moFor(cp.checked), overrides: ov };
         if (c) Object.assign(c, rec); else S.cats.push({ id: uid(), ...rec });
         save(); closeDlg(); render(); toast(c ? 'Saved' : 'Category created')
       };
-      const cur = () => JSON.stringify([$('#cn').value, cb.value, ic, col, cp.checked]);
+      const cur = () => JSON.stringify([$('#cn').value, cb.value, cbm ? cbm.value : '', ic, col, cp.checked]);
       const init = cur(); dirtyCheck = () => cur() !== init;
       setTimeout(() => $('#cn').focus(), 30)
     }
