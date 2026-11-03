@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F8F8F5">
+  <script>try{if(localStorage.getItem("kr.pin")==="1")document.documentElement.classList.add("locked")}catch(e){}</script>
   <script>try{var t=localStorage.getItem("ledger.theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
   <title>Kaya Raya — by geboboi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -836,6 +837,27 @@
     .seg.three {
       grid-template-columns: repeat(3, 1fr)
     }
+  
+    html.locked main, html.locked nav, html.locked .fab { visibility: hidden }
+    #lock { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; padding: env(safe-area-inset-top, 0px) 20px env(safe-area-inset-bottom, 0px); background: var(--bg); color: var(--text); overflow: auto }
+    #lock[open] { display: flex; align-items: center; justify-content: center }
+    .lk { width: 100%; max-width: 320px; text-align: center }
+    .lk-logo { font-weight: 700; font-size: 24px; letter-spacing: -.01em }
+    .dots { display: flex; gap: 14px; justify-content: center; margin: 26px 0 8px }
+    .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--muted) }
+    .dots i.on { background: var(--text); border-color: var(--text) }
+    .dots.shake { animation: shake .35s }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px) } 40%, 80% { transform: translateX(8px) } }
+    .lk-msg { min-height: 20px; font-size: 13px; color: var(--exp-text) }
+    .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; justify-items: center }
+    .keys button { width: 68px; height: 68px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 24px; font-weight: 500 }
+    .keys button:active { background: var(--line) }
+    .keys .ghost { border: 0; background: none; font-size: 14px; color: var(--muted) }
+    .tgl { appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 99px; background: var(--line); position: relative; cursor: pointer; border: 0; padding: 0; flex: none; transition: background .2s }
+    .tgl::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform .2s }
+    .tgl:checked { background: var(--accent) }
+    .tgl:checked::after { transform: translateX(18px) }
+    @media (prefers-reduced-motion: reduce) { .dots.shake { animation: none } }
   </style>
 </head>
 
@@ -845,6 +867,7 @@
   <nav id="nav" aria-label="Main"></nav>
   <dialog id="dlg"></dialog>
   <dialog id="dlg2"></dialog>
+  <dialog id="lock" aria-labelledby="lk-t"></dialog>
   <div id="toast" role="status"></div>
 
   <script>
@@ -1057,6 +1080,10 @@
       let legacy = false; try { const o = JSON.parse(localStorage.getItem(KEY)); legacy = !!(o && Array.isArray(o.tx) && o.tx.length) } catch (e) { }
       return `<div class="head"><h1>Settings</h1></div>
   <div class="card"><h2>Sync</h2><p class="small muted" style="margin:4px 0 0">Your data is saved to your account and loads on any device you sign in on. Changes made offline stay on this device and upload when you reconnect. Other devices pick up changes when you reopen the app or tap Sync now.</p><div class="acts"><button class="btn" data-act="syncnow">Sync now</button></div></div>
+  <div class="card"><div class="row between"><div class="grow"><h2>PIN lock</h2><p class="small muted" style="margin:4px 0 0">Ask for a PIN when the app opens, and after you've been away for 30 seconds.</p></div>
+  <input type="checkbox" class="tgl" id="pinsw" role="switch" aria-label="PIN lock" ${pinOn() ? 'checked' : ''}></div>
+  ${pinOn() ? '<div class="acts"><button class="btn" data-act="locknow">Lock now</button></div>' : ''}
+  <p class="small muted" style="margin:12px 0 0">This is a screen lock for this device only. It keeps casual viewers out but does not encrypt your data.</p></div>
   <div class="card"><h2>Appearance</h2><div class="seg three" role="group" aria-label="Theme">${[['auto', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, n]) => `<button type="button" data-act="theme" data-v="${v}" aria-pressed="${theme === v}">${n}</button>`).join('')}</div></div>
   <div class="card"><h2>Currency</h2><p class="small muted" style="margin:4px 0 0">Indonesian Rupiah (IDR). Amounts are whole rupiah.</p></div>
   <div class="card"><h2>Your data</h2><p class="small muted">Export a backup file, or import one made earlier.</p>
@@ -1205,6 +1232,7 @@
       else if (a === 'close') tryClose();
       else if (a === 'togglehide') { hide = !hide; try { localStorage.setItem('ledger.hide', hide ? '1' : '0') } catch (e) { } render() }
       else if (a === 'theme') { setTheme(b.dataset.v); render() }
+      else if (a === 'locknow') { lock() }
       else if (a === 'retry') { enter(user) }
       else if (a === 'close2') dlg2.close();
       else if (a === 'discard') closeDlg();
@@ -1217,6 +1245,13 @@
       else if (a === 'wipe') confirmDlg('All transactions and categories will be permanently removed from your account and every device.', 'Erase', () => { S = { cats: [], tx: [] }; save(); render(); toast('All data erased') });
     });
     document.addEventListener('change', e => {
+      if (e.target.id === 'pinsw') {
+        if (e.target.checked) {
+          if (!(window.crypto && crypto.subtle)) { e.target.checked = false; toast('PIN lock needs a secure (https) connection'); return }
+          setPinOn(true); render(); toast('PIN lock on')
+        } else { e.target.checked = true; askPin('Enter PIN to turn off lock', () => { setPinOn(false); render(); toast('PIN lock off') }) }
+        return
+      }
       if (e.target.id === 'imp') { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { askImport(JSON.parse(r.result)) } catch (x) { toast('That file is not a valid backup') } }; r.readAsText(f); e.target.value = '' }
       if (e.target.id === 'fm') { F.month = e.target.value; render() }
       if (e.target.id === 'ft') { F.type = e.target.value; render() }
@@ -1227,6 +1262,67 @@
     dlg.addEventListener('click', e => { if (e.target === dlg && outside(e, dlg)) tryClose() });
     dlg2.addEventListener('click', e => { if (e.target === dlg2 && outside(e, dlg2)) dlg2.close() });
     dlg.addEventListener('cancel', e => { e.preventDefault(); tryClose() });
+    /* ---------- PIN lock ---------- */
+    const PIN_SALT = 'kayaraya.pin.v1', PIN_HASH = '4233b70ee2a2032a7e82aa1c9b7bcc0fe01c1bf392f013ea2ad8a488525b7b06';
+    const pinOn = () => { try { return localStorage.getItem('kr.pin') === '1' } catch (e) { return false } };
+    function setPinOn(v) { try { v ? localStorage.setItem('kr.pin', '1') : localStorage.removeItem('kr.pin') } catch (e) { } if (!v) document.documentElement.classList.remove('locked') }
+    async function pinHash(p) {
+      const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(p), 'PBKDF2', false, ['deriveBits']);
+      const b = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode(PIN_SALT), iterations: 150000 }, k, 256);
+      return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('')
+    }
+    const lockEl = document.getElementById('lock');
+    let kp = null, kbuf = '', kbusy = false, ktick;
+    const failState = () => { try { return JSON.parse(localStorage.getItem('kr.pinfail')) || { n: 0, until: 0 } } catch (e) { return { n: 0, until: 0 } } };
+    const saveFail = f => { try { localStorage.setItem('kr.pinfail', JSON.stringify(f)) } catch (e) { } };
+    const padMsg = t => { const m = lockEl.querySelector('.lk-msg'); if (m) m.textContent = t };
+    function updDots() { lockEl.querySelectorAll('.dots i').forEach((d, i) => d.classList.toggle('on', i < kbuf.length)) }
+    function checkLockout() {
+      clearInterval(ktick);
+      const show = () => { const l = Math.ceil((failState().until - Date.now()) / 1000); if (l > 0) { padMsg('Too many attempts. Try again in ' + l + 's.'); return true } return false };
+      if (show()) ktick = setInterval(() => { if (!show()) { padMsg(''); clearInterval(ktick) } }, 500)
+    }
+    function drawPad() {
+      lockEl.innerHTML = `<div class="lk"><div class="lk-logo">Kaya Raya</div><h1 id="lk-t" style="font-size:16px;font-weight:500;margin:6px 0 0;color:var(--muted)">${esc(kp.title)}</h1>
+      <div class="dots" aria-hidden="true">${'<i></i>'.repeat(6)}</div><div class="lk-msg" role="alert"></div>
+      <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}" aria-label="${n}">${n}</button>`).join('')}${kp.cancel ? '<button type="button" class="ghost" data-pc="1">Cancel</button>' : '<span></span>'}<button type="button" data-k="0" aria-label="0">0</button><button type="button" class="ghost" data-k="b" aria-label="Delete">⌫</button></div></div>`
+    }
+    function openPad(o) { kp = o; kbuf = ''; kbusy = false; drawPad(); if (!lockEl.open) lockEl.showModal(); checkLockout() }
+    function closePad() { clearInterval(ktick); kp = null; if (lockEl.open) lockEl.close() }
+    function lock() { if (!pinOn() || lockEl.open) return; openPad({ title: 'Enter your PIN', cancel: false, onOk: () => document.documentElement.classList.remove('locked') }) }
+    function askPin(title, onOk) { openPad({ title, cancel: true, onOk }) }
+    async function kpress(k) {
+      if (!kp || kbusy || failState().until > Date.now()) return;
+      if (k === 'b') kbuf = kbuf.slice(0, -1); else if (kbuf.length < 6) kbuf += k;
+      updDots();
+      if (kbuf.length < 6) return;
+      kbusy = true;
+      let ok = false;
+      try { ok = (await pinHash(kbuf)) === PIN_HASH } catch (e) { padMsg('PIN lock needs a secure (https) connection.'); kbuf = ''; updDots(); kbusy = false; return }
+      if (ok) { saveFail({ n: 0, until: 0 }); const f = kp.onOk; closePad(); if (f) f() }
+      else {
+        const st = failState(); st.n++; if (st.n >= 5) st.until = Date.now() + Math.min(300, 15 * 2 ** (st.n - 5)) * 1000; saveFail(st);
+        const d = lockEl.querySelector('.dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+        kbuf = ''; updDots(); padMsg(st.until > Date.now() ? '' : 'Incorrect PIN. Try again.'); checkLockout()
+      }
+      kbusy = false
+    }
+    lockEl.addEventListener('click', e => {
+      const b = e.target.closest('[data-k]'); if (b) { kpress(b.dataset.k); return }
+      if (e.target.closest('[data-pc]')) closePad()
+    });
+    lockEl.addEventListener('cancel', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (!lockEl.open) return;
+      if (/^\d$/.test(e.key)) kpress(e.key); else if (e.key === 'Backspace') kpress('b'); else if (e.key === 'Escape' && kp && kp.cancel) closePad()
+    });
+    let hiddenAt = 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+      else if (pinOn() && hiddenAt && Date.now() - hiddenAt > 30000) lock()
+    });
+    if (pinOn()) lock();
+
     booting = false; user = { id: 'app' }; enter(user);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(false) });
     window.addEventListener('online', () => { if (dirty) sync(); else refresh(false) });
