@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F8F8F5">
   <script>try{var t=localStorage.getItem("ledger.theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
-  <title>Ledger — by geboboi</title>
+  <title>Kaya Raya — by geboboi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
@@ -925,7 +925,8 @@
     const Calc = {
       inMonth: (m) => S.tx.filter(t => monthOf(t.date) === m),
       sum: (l, type) => l.filter(t => t.type === type).reduce((a, t) => a + t.amount, 0),
-      totals(m) { const l = this.inMonth(m); const inc = this.sum(l, 'income'), exp = this.sum(l, 'expense'); return { inc, exp, bal: inc - exp } },
+      opening(m) { return S.tx.filter(t => monthOf(t.date) < m).reduce((a, t) => a + (t.type === 'income' ? t.amount : -t.amount), 0) },
+      totals(m) { const l = this.inMonth(m); const inc = this.sum(l, 'income'), exp = this.sum(l, 'expense'), open = this.opening(m); return { inc, exp, open, bal: open + inc - exp } },
       catRows(m) {
         const l = this.inMonth(m).filter(t => t.type === 'expense');
         return S.cats.filter(c => c.primary !== false || c.month === m || l.some(t => t.cat === c.id)).map(c => {
@@ -1016,6 +1017,7 @@
   <div class="card"><div class="row between"><div class="muted small">Remaining balance</div>
   <button class="eye" data-act="togglehide" aria-pressed="${hide}" aria-label="${hide ? 'Show amounts' : 'Hide amounts'}">${hide ? EYE_OFF : EYE}</button></div>
   <div class="balance ${hide ? '' : T.bal < 0 ? 'neg' : 'pos'}">${mask(idr(T.bal))}</div>
+  ${T.open !== 0 ? `<div class="small muted" style="margin:-8px 0 14px">Includes ${mask(idr(T.open))} carried over from ${mLabel(shift(month, -1)).split(' ')[0]}</div>` : ''}
   <div class="split"><div><span class="muted small">Income</span><b class="${hide ? '' : 'pos'}">${mask(idr(T.inc))}</b></div><div><span class="muted small">Expenses</span><b class="${hide ? '' : 'neg'}">${mask(idr(T.exp))}</b></div></div></div>
   <div class="card"><div class="row between"><h2>Budget used</h2><span class="badge ${os.k}">${os.i ? os.i + ' ' : ''}${os.t}</span></div>
   <div class="bar ${os.k}" role="progressbar" aria-valuenow="${op == null ? 0 : Math.round(Math.min(op, 100))}" aria-valuemin="0" aria-valuemax="100" aria-label="Overall budget used"><i style="width:${op == null ? 0 : Math.min(100, op)}%"></i></div>
@@ -1074,7 +1076,7 @@
 
     function authView() {
       const up = authMode === 'up';
-      return `<div style="max-width:380px;margin:8vh auto 0"><h1 style="font-size:26px;margin-bottom:6px">Ledger</h1><p class="muted" style="margin:0 0 18px">${up ? 'Create an account to sync your finances across devices.' : 'Sign in to load your finances on this device.'}</p>
+      return `<div style="max-width:380px;margin:8vh auto 0"><h1 style="font-size:26px;margin-bottom:6px">Kaya Raya</h1><p class="muted" style="margin:0 0 18px">${up ? 'Create an account to sync your finances across devices.' : 'Sign in to load your finances on this device.'}</p>
   <div class="card"><form id="af" novalidate><label for="ae" style="margin-top:0">Email</label><input id="ae" type="email" autocomplete="email" inputmode="email">
   <label for="ap">Password</label><input id="ap" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="At least 6 characters">
   <div class="err" id="aerr" role="alert"></div><div class="acts"><button class="btn pri">${up ? 'Create account' : 'Sign in'}</button></div></form></div>
@@ -1087,7 +1089,7 @@
       if (wait) {
         app.innerHTML = (user && !booting && syncState === 'error')
           ? `<div class="loader" role="alert"><div class="lt">Can't reach the server</div><div class="small muted">Check your connection and try again.${lastErr ? '<br>' + esc(lastErr) : ''}</div><button class="btn pri" data-act="retry" style="margin-top:8px">Try again</button></div>`
-          : `<div class="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><div class="lt">Ledger</div><div class="small muted">Manifesting 3 digits salary per day, amen...</div></div>`;
+          : `<div class="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><div class="lt">Kaya Raya</div><div class="small muted">Manifesting 3 digits salary per day, amen...</div></div>`;
         return
       }
       if (out) { app.innerHTML = authView(); return }
@@ -1211,7 +1213,7 @@
       else if (a === 'syncnow') refresh(true);
       else if (a === 'importfile') $('#imp').click();
       else if (a === 'importlocal') { try { askImport(JSON.parse(localStorage.getItem(KEY))) } catch (e) { toast('Could not read the saved data') } }
-      else if (a === 'export') { const u = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); const l = document.createElement('a'); l.href = u; l.download = 'ledger-backup.json'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 500); toast('Backup exported') }
+      else if (a === 'export') { const u = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); const l = document.createElement('a'); l.href = u; l.download = 'kaya-raya-backup.json'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 500); toast('Backup exported') }
       else if (a === 'wipe') confirmDlg('All transactions and categories will be permanently removed from your account and every device.', 'Erase', () => { S = { cats: [], tx: [] }; save(); render(); toast('All data erased') });
     });
     document.addEventListener('change', e => {
